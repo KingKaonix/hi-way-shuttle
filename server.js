@@ -8,6 +8,7 @@ const fs = require('fs');
 const { createTelegramBot } = require('./bots/telegram');
 const { createMessengerBot } = require('./bots/messenger');
 const { getBookings, addBooking, cancelBooking, loadBookings, saveBookings } = require('./store');
+const { startPolling } = require('./poller');
 
 // --- Validate required env vars ---
 const REQUIRED_ENV = ['TELEGRAM_BOT_TOKEN'];
@@ -161,7 +162,6 @@ app.put('/api/admin/schedules/:routeId', requireAdmin, (req, res) => {
 // --- Webhooks ---
 app.post('/webhook/telegram', async (req, res) => {
   try {
-    // Validate webhook secret if configured
     if (TELEGRAM_SECRET && req.headers['x-telegram-bot-api-secret-token'] !== TELEGRAM_SECRET) {
       return res.sendStatus(403);
     }
@@ -230,6 +230,7 @@ app.get('/health', (req, res) => {
     routes: routes.length,
     bookings: getBookings().length,
     uptime: process.uptime(),
+    polling: !!process.env.POLLING,
     admin: !!ADMIN_KEY
   });
 });
@@ -242,6 +243,14 @@ app.use((req, res) => {
 // --- Start ---
 const server = app.listen(PORT, () => {
   console.log(`Hi-Way-Shuttle running on port ${PORT}`);
+
+  // Start Telegram polling if no webhook is configured (or POLLING=true)
+  if (process.env.POLLING || !TELEGRAM_SECRET) {
+    console.log('Starting Telegram polling loop (no webhook configured)...');
+    startPolling(process.env.TELEGRAM_BOT_TOKEN, (update, fallback) =>
+      telegramBot.handleUpdate(update, fallback)
+    ).catch(err => console.error('Poller exited:', err));
+  }
 });
 
 // --- Graceful shutdown ---
