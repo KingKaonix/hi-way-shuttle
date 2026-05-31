@@ -1,0 +1,34 @@
+[
+  {
+    "id": "rt-dw-01",
+    "name": "Downtown Express",
+    "stops": [
+      "Central Station",
+      "Market Square",
+      "City Hall",
+      "Financial District"
+    ],
+    "description": "Express route through the downtown core"
+  },
+  {
+    "id": "rt-ap-02",
+    "name": "Airport Link",
+    "stops": [
+      "Central Station",
+      "Airport Terminal 1",
+      "Airport Terminal 2"
+    ],
+    "description": "Direct connection between downtown and the airport"
+  },
+  {
+    "id": "rt-uv-03",
+    "name": "University Shuttle",
+    "stops": [
+      "Central Station",
+      "University Campus",
+      "Student Housing",
+      "Tech Park"
+    ],
+    "description": "Scheduled service for university and tech park"
+  }
+]

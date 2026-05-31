@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hi-Way-Shuttle — Scheduled Route Shuttle Service</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #222; }
+    .hero { background: linear-gradient(135deg, #1a5276, #2e86c1); color: #fff; text-align: center; padding: 80px 20px; }
+    .hero h1 { font-size: 2.5em; margin-bottom: 10px; }
+    .hero p { font-size: 1.1em; opacity: .9; }
+    .container { max-width: 1000px; margin: 0 auto; padding: 40px 20px; }
+    h2 { margin-bottom: 20px; color: #1a5276; }
+    .routes { display: grid; gap: 20px; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
+    .card { border: 1px solid #ddd; border-radius: 10px; padding: 20px; }
+    .card h3 { color: #2e86c1; margin-bottom: 8px; }
+    .card .stops { color: #555; font-size: 0.9em; margin-bottom: 5px; }
+    .card .stops span { display: inline-block; margin: 2px 4px; }
+    .card .fare { font-weight: bold; color: #1a5276; }
+    .btn { display: inline-block; background: #2e86c1; color: #fff; padding: 10px 24px; border-radius: 6px; text-decoration: none; margin-top: 10px; }
+    table { width: 100%; border-collapse: collapse; margin: 10px 0; }
+    th, td { text-align: left; padding: 8px 12px; border-bottom: 1px solid #eee; }
+    th { background: #f8f9fa; }
+    footer { text-align: center; padding: 30px; color: #777; font-size: 0.85em; }
+    .arrow { color: #2e86c1; margin: 0 4px; }
+  </style>
+</head>
+<body>
+  <section class="hero">
+    <h1>🚐 Hi-Way-Shuttle</h1>
+    <p>Reliable scheduled shuttle service for your daily commute</p>
+  </section>
+
+  <div class="container">
+    <h2>Our Routes</h2>
+    <div class="routes" id="route-list">
+      <p>Loading routes...</p>
+    </div>
+  </div>
+
+  <div class="container">
+    <h2>Schedule & Fares</h2>
+    <div id="schedule-fares">
+      <p>Loading...</p>
+    </div>
+  </div>
+
+  <div class="container">
+    <h2>Book a Ride</h2>
+    <p>Use our <strong>Telegram Mini App</strong> or <strong>Messenger bot</strong> to book instantly.</p>
+    <p>Open Telegram and search for your bot, or scan the QR code on your booking confirmation.</p>
+  </div>
+
+  <footer>
+    Hi-Way-Shuttle &mdash; Scheduled route shuttle service
+  </footer>
+
+  <script>
+    async function loadRoutes() {
+      try {
+        const res = await fetch('/api/routes');
+        const routes = await res.json();
+        const container = document.getElementById('route-list');
+        container.innerHTML = routes.map(r => `
+          <div class="card">
+            <h3>${r.name}</h3>
+            <div class="stops">${r.stops.map((s, i) => i > 0 ? `<span class="arrow">→</span> ${s}` : s).join('')}</div>
+            <p>${r.description}</p>
+          </div>
+        `).join('');
+      } catch (e) {
+        document.getElementById('route-list').innerHTML = '<p>Could not load routes.</p>';
+      }
+    }
+
+    async function loadSchedules() {
+      try {
+        const res = await fetch('/api/routes');
+        const routes = await res.json();
+        const faresRes = await fetch('/api/fares');
+        const fares = await faresRes.json();
+        let html = '';
+        for (const r of routes) {
+          const schedRes = await fetch('/api/schedules/' + r.id);
+          const sched = await schedRes.json();
+          const fare = fares.routes[r.id];
+          html += `<h3>${r.name}</h3>`;
+          html += `<p><strong>Fare:</strong> ${fares.currency} ${fare.flat_fare.toFixed(2)}</p>`;
+          html += `<table><tr><th>Departure</th><th>Arrival</th></tr>`;
+          html += sched.map(s => `<tr><td>${s.departure}</td><td>${s.arrival}</td></tr>`).join('');
+          html += '</table>';
+        }
+        document.getElementById('schedule-fares').innerHTML = html;
+      } catch (e) {
+        document.getElementById('schedule-fares').innerHTML = '<p>Could not load schedules.</p>';
+      }
+    }
+
+    loadRoutes();
+    loadSchedules();
+  </script>
+</body>
+</html>
