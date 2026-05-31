@@ -2,43 +2,19 @@
   {
     "id": "rt-dw-01",
     "name": "Downtown Express",
-    "stops": [
-      "Central Station",
-      "Market Square",
-      "City Hall",
-      "Financial District"
-    ],
+    "stops": ["Central Station", "Market Square", "City Hall", "Financial District"],
     "description": "Express route through the downtown core"
   },
   {
     "id": "rt-ap-02",
     "name": "Airport Link",
-    "stops": [
-      "Central Station",
-      "Airport Terminal 1",
-      "Airport Terminal 2"
-    ],
+    "stops": ["Central Station", "Airport Terminal 1", "Airport Terminal 2"],
     "description": "Direct connection between downtown and the airport"
   },
   {
     "id": "rt-uv-03",
     "name": "University Shuttle",
-    "stops": [
-      "Central Station",
-      "University Campus",
-      "Student Housing",
-      "Tech Park"
-    ],
+    "stops": ["Central Station", "University Campus", "Student Housing", "Tech Park"],
     "description": "Scheduled service for university and tech park"
-  },
-  {
-    "id": "rt-nw-04",
-    "name": "Night Owl",
-    "stops": [
-      "Central",
-      "North Park",
-      "West End"
-    ],
-    "description": "Late night service"
   }
 ]
