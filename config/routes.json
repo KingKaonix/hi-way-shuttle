@@ -30,5 +30,15 @@
       "Tech Park"
     ],
     "description": "Scheduled service for university and tech park"
+  },
+  {
+    "id": "rt-nw-04",
+    "name": "Night Owl",
+    "stops": [
+      "Central",
+      "North Park",
+      "West End"
+    ],
+    "description": "Late night service"
   }
 ]

@@ -1,10 +1,16 @@
 {
-  "base_fare": 3.50,
-  "per_stop": 1.50,
+  "base_fare": 3.5,
+  "per_stop": 1.5,
   "routes": {
-    "rt-dw-01": { "flat_fare": 5.00 },
-    "rt-ap-02": { "flat_fare": 8.00 },
-    "rt-uv-03": { "flat_fare": 4.00 }
+    "rt-dw-01": {
+      "flat_fare": 6.5
+    },
+    "rt-ap-02": {
+      "flat_fare": 8
+    },
+    "rt-uv-03": {
+      "flat_fare": 4
+    }
   },
   "currency": "USD"
 }
