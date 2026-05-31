@@ -4,7 +4,9 @@
   "description": "Hi-Way-Shuttle — Telegram Mini App, Messenger Bot & Landing Page",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js"
+    "start": "node server.js",
+    "test": "node test/smoke.js",
+    "docker": "docker build -t hi-way-shuttle . && docker run -p 3000:3000 --env-file .env hi-way-shuttle"
   },
   "dependencies": {
     "express": "^4.21.0",
