@@ -4,29 +4,64 @@ const bodyParser = require('body-parser');
 const cors = require('cors');
 const path = require('path');
 const fs = require('fs');
+const crypto = require('crypto');
 
 const { createTelegramBot } = require('./bots/telegram');
 const { createMessengerBot } = require('./bots/messenger');
 const { getBookings, addBooking, cancelBooking, loadBookings, saveBookings } = require('./store');
 const { startPolling } = require('./poller');
 
-// --- Validate required env vars ---
-const REQUIRED_ENV = ['TELEGRAM_BOT_TOKEN'];
-const missing = REQUIRED_ENV.filter(k => !process.env[k]);
-if (missing.length > 0) {
-  console.error(`FATAL: Missing required env vars: ${missing.join(', ')}`);
-  process.exit(1);
+// --- Simple in-memory auth ---
+const users = [];
+const tokens = {};
+
+function hashPassword(password) {
+  return crypto.createHash('sha256').update(password).digest('hex');
+}
+
+function generateToken() {
+  return crypto.randomBytes(32).toString('hex');
+}
+
+// Seed a default admin user
+users.push({ id: 1, email: 'admin@hiway.shuttle', name: 'Admin', password: hashPassword('admin123'), role: 'admin' });
+
+// --- In-memory trip store ---
+const tripsStore = {};
+
+function generateTripsForDate(dateStr) {
+  const schedule = Object.entries(schedules).flatMap(([routeId, slots]) => {
+    const route = routes.find(r => r.id === routeId);
+    if (!route) return [];
+    return slots.map((slot, i) => ({
+      id: parseInt(routeId.replace(/\D/g, '') + String(i) + dateStr.replace(/-/g, '').slice(-4), 10),
+      route_id: routeId,
+      route_name: route.name,
+      departure_time: slot.departure,
+      arrival_time: slot.arrival,
+      date: dateStr,
+      capacity_total: 20,
+      capacity_available: 20,
+    }));
+  });
+  tripsStore[dateStr] = schedule;
+  return schedule;
 }
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 const ADMIN_KEY = process.env.ADMIN_API_KEY || '';
 const TELEGRAM_SECRET = process.env.TELEGRAM_WEBHOOK_SECRET || '';
+const reactDist = path.join(__dirname, 'packages', 'web', 'dist');
 
 app.use(cors());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
-app.use(express.static(path.join(__dirname, 'public')));
+
+// Serve static assets only (not index.html — handled by custom routes below)
+app.use('/assets', express.static(path.join(reactDist, 'assets')));
+app.use('/mini-app', express.static(path.join(__dirname, 'public', 'mini-app')));
+app.use('/favicon.svg', express.static(path.join(reactDist, 'favicon.svg')));
 
 // --- Load config ---
 let routes = JSON.parse(fs.readFileSync(path.join(__dirname, 'config', 'routes.json'), 'utf8'));
@@ -68,9 +103,32 @@ const messengerBot = createMessengerBot(
 );
 
 // --- API Routes ---
+
+// Landing page (the fancy one)
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
+
+// React SPA — all non-API/asset routes
+app.get('/login', spa);
+app.get('/register', spa);
+app.get('/routes', spa);
+app.get('/bookings', spa);
+app.get('/admin', spa);
+app.get('/app', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'mini-app', 'index.html'));
+});
+app.get('/app/*', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'mini-app', 'index.html'));
+});
+
+function spa(req, res) {
+  const reactIndex = path.join(reactDist, 'index.html');
+  if (fs.existsSync(reactIndex)) {
+    return res.sendFile(reactIndex);
+  }
+  res.status(503).send('React app not built yet');
+}
 
 app.get('/api/routes', (req, res) => {
   res.json(routes);
@@ -98,6 +156,54 @@ app.get('/api/fares', (req, res) => {
     return res.json(routeFare);
   }
   res.json(fares);
+});
+
+// --- Auth API ---
+app.post('/api/auth/register', (req, res) => {
+  const { email, name, password } = req.body;
+  if (!email || !name || !password) return res.status(400).json({ error: 'Missing required fields: email, name, password' });
+  if (password.length < 8) return res.status(400).json({ error: 'Password must be at least 8 characters' });
+  if (users.find(u => u.email === email)) return res.status(409).json({ error: 'Email already registered' });
+  const user = { id: users.length + 1, email, name, password: hashPassword(password), role: 'user' };
+  users.push(user);
+  const token = generateToken();
+  tokens[token] = user;
+  const { password: _, ...safe } = user;
+  res.status(201).json({ user: safe, token });
+});
+
+app.post('/api/auth/login', (req, res) => {
+  const { email, password } = req.body;
+  if (!email || !password) return res.status(400).json({ error: 'Email and password required' });
+  const user = users.find(u => u.email === email && u.password === hashPassword(password));
+  if (!user) return res.status(401).json({ error: 'Invalid email or password' });
+  const token = generateToken();
+  tokens[token] = user;
+  const { password: _, ...safe } = user;
+  res.json({ user: safe, token });
+});
+
+app.get('/api/auth/me', (req, res) => {
+  const auth = req.headers.authorization;
+  if (!auth || !auth.startsWith('Bearer ')) return res.status(401).json({ error: 'No token' });
+  const token = auth.slice(7);
+  const user = tokens[token];
+  if (!user) return res.status(401).json({ error: 'Invalid token' });
+  const { password: _, ...safe } = user;
+  res.json(safe);
+});
+
+// --- Trips API ---
+app.get('/api/trips', (req, res) => {
+  const date = req.query.date || new Date().toISOString().split('T')[0];
+  if (!tripsStore[date]) generateTripsForDate(date);
+  res.json(tripsStore[date]);
+});
+
+app.post('/api/trips/generate', (req, res) => {
+  const date = req.body.date || new Date().toISOString().split('T')[0];
+  const trips = generateTripsForDate(date);
+  res.json(trips);
 });
 
 // --- Admin CRUD ---
@@ -213,6 +319,15 @@ app.post('/webhook/messenger', async (req, res) => {
 
 // --- Booking API ---
 app.get('/api/bookings', (req, res) => {
+  const auth = req.headers.authorization;
+  if (auth && auth.startsWith('Bearer ')) {
+    const token = auth.slice(7);
+    const user = tokens[token];
+    if (user) {
+      const userBookings = getBookings().filter(b => b.userEmail === user.email);
+      return res.json(userBookings);
+    }
+  }
   res.json(getBookings());
 });
 
@@ -222,6 +337,61 @@ app.get('/api/bookings/:chatId', (req, res) => {
     String(b.chatId) === String(req.params.chatId) || b.messengerId === req.params.chatId
   );
   res.json(userBookings);
+});
+
+app.post('/api/bookings', (req, res) => {
+  const { route, departure, arrival, trip_id, seats, chatId, messengerId } = req.body;
+  let routeName = route;
+  let depTime = departure;
+  let arrTime = arrival;
+  let fareAmount = null;
+
+  if (trip_id) {
+    const allTrips = Object.values(tripsStore).flat();
+    const trip = allTrips.find(t => t.id === trip_id);
+    if (!trip) return res.status(404).json({ error: 'Trip not found' });
+    routeName = trip.route_name;
+    depTime = trip.departure_time;
+    arrTime = trip.arrival_time;
+    const routeFare = fares.routes[trip.route_id];
+    fareAmount = routeFare ? routeFare.flat_fare : fares.base_fare;
+    const seatCount = seats || 1;
+    if (trip.capacity_available < seatCount) return res.status(409).json({ error: 'Not enough seats' });
+    trip.capacity_available -= seatCount;
+  }
+
+  if (!routeName || !depTime || !arrTime) {
+    return res.status(400).json({ error: 'Missing required fields: route, departure, arrival (or trip_id)' });
+  }
+
+  let userEmail = undefined;
+  const auth = req.headers.authorization;
+  if (auth && auth.startsWith('Bearer ')) {
+    const user = tokens[auth.slice(7)];
+    if (user) userEmail = user.email;
+  }
+
+  const booking = addBooking({
+    id: bookingIdRef.value++,
+    route: routeName,
+    departure: depTime,
+    arrival: arrTime,
+    fare_amount: fareAmount,
+    chatId: chatId ? String(chatId) : undefined,
+    messengerId: messengerId || undefined,
+    userEmail,
+    status: 'confirmed',
+    createdAt: new Date().toISOString()
+  });
+  res.status(201).json(booking);
+});
+
+app.post('/api/bookings/:id/cancel', (req, res) => {
+  const id = parseInt(req.params.id, 10);
+  if (isNaN(id)) return res.status(400).json({ error: 'Invalid booking ID' });
+  const booking = cancelBooking(id);
+  if (!booking) return res.status(404).json({ error: 'Booking not found' });
+  res.json(booking);
 });
 
 app.get('/health', (req, res) => {
@@ -237,23 +407,35 @@ app.get('/health', (req, res) => {
 
 // --- 404 ---
 app.use((req, res) => {
-  res.status(404).json({ error: 'Not found' });
+  if (req.path.startsWith('/api/') || req.path.startsWith('/webhook/')) {
+    return res.status(404).json({ error: 'Not found' });
+  }
+  // Try React SPA as fallback for unknown frontend routes
+  const reactIndex = path.join(reactDist, 'index.html');
+  if (fs.existsSync(reactIndex)) {
+    return res.sendFile(reactIndex);
+  }
+  res.status(404).sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
 // --- Start ---
+if (!process.env.TELEGRAM_BOT_TOKEN) {
+  console.warn('WARNING: TELEGRAM_BOT_TOKEN not set — Telegram bot will not work');
+}
+
 const server = app.listen(PORT, () => {
   console.log(`Hi-Way-Shuttle running on port ${PORT}`);
 
-  // Start Telegram polling if no webhook is configured (or POLLING=true)
-  if (process.env.POLLING || !TELEGRAM_SECRET) {
-    console.log('Starting Telegram polling loop (no webhook configured)...');
+  if (process.env.TELEGRAM_BOT_TOKEN && (process.env.POLLING || !TELEGRAM_SECRET)) {
+    console.log('Starting Telegram polling loop...');
     startPolling(process.env.TELEGRAM_BOT_TOKEN, (update, fallback) =>
       telegramBot.handleUpdate(update, fallback)
     ).catch(err => console.error('Poller exited:', err));
+  } else if (!process.env.TELEGRAM_BOT_TOKEN) {
+    console.log('Telegram bot disabled — set TELEGRAM_BOT_TOKEN to enable');
   }
 });
 
-// --- Graceful shutdown ---
 function shutdown(signal) {
   console.log(`\nReceived ${signal}, shutting down gracefully...`);
   saveBookings();

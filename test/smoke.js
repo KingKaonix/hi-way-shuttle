@@ -3,15 +3,19 @@ const http = require('http');
 let passed = 0;
 let failed = 0;
 
-async function request(method, path) {
+async function request(method, path, body) {
   return new Promise((resolve, reject) => {
     const opts = { method, hostname: 'localhost', port: 3000, path };
+    if (body) {
+      opts.headers = { 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(body) };
+    }
     const req = http.request(opts, (res) => {
       let data = '';
       res.on('data', d => data += d);
       res.on('end', () => resolve({ status: res.statusCode, body: data }));
     });
     req.on('error', reject);
+    if (body) req.write(body);
     req.end();
   });
 }
@@ -73,6 +77,15 @@ async function run() {
 
   const nf = await request('GET', '/api/noexist');
   check('Unknown endpoint returns 404', nf.status === 404);
+
+  const postRes = await request('POST', '/api/bookings', JSON.stringify({ route: 'Downtown Express', departure: '07:00', arrival: '07:25' }));
+  check('POST /api/bookings returns 201', postRes.status === 201);
+  const created = JSON.parse(postRes.body);
+  check('Booking has id', created && typeof created.id === 'number');
+  check('Booking has status confirmed', created.status === 'confirmed');
+
+  const missingRes = await request('POST', '/api/bookings', JSON.stringify({}));
+  check('POST /api/bookings missing fields returns 400', missingRes.status === 400);
 
   const landing = await request('GET', '/');
   check('GET / returns 200', landing.status === 200);

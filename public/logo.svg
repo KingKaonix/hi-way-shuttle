@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 60" fill="none">
+  <defs>
+    <linearGradient id="logo-gold" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#e7b433"/>
+      <stop offset="100%" stop-color="#c9952b"/>
+    </linearGradient>
+    <linearGradient id="logo-bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#1e3a5f"/>
+      <stop offset="100%" stop-color="#0a1628"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Icon: Stylized shield with H + road -->
+  <rect x="4" y="4" width="44" height="48" rx="10" fill="url(#logo-bg)" stroke="url(#logo-gold)" stroke-width="1.5"/>
+  
+  <!-- H letterform in the shield -->
+  <path d="M14 18V38M14 28H26M26 18V38M38 18V38M38 28H26" stroke="url(#logo-gold)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+  
+  <!-- Road line accent -->
+  <path d="M38 28Q42 28 44 32L48 36" stroke="#e7b433" stroke-width="2" stroke-linecap="round" opacity="0.6"/>
+
+  <!-- Wordmark -->
+  <text x="60" y="32" font-family="Inter, system-ui, sans-serif" font-size="22" font-weight="800" letter-spacing="-0.5" fill="#0a1628">
+    Hi-Way
+  </text>
+  <text x="60" y="48" font-family="Inter, system-ui, sans-serif" font-size="11" font-weight="600" letter-spacing="2.5" fill="#64748b">
+    SHUTTLE
+  </text>
+
+  <!-- Subtle gold dot -->
+  <circle cx="195" cy="22" r="2" fill="url(#logo-gold)"/>
+</svg>

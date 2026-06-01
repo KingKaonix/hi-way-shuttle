@@ -39,6 +39,9 @@ function createTelegramBot(botToken, getBookings, addBooking, cancelBooking, boo
         'I can help you book rides and check schedules.\n\n' +
         'Commands:\n' +
         '/routes - View all routes\n' +
+        '/schedule - View schedule for a route\n' +
+        '/fare - Check fares\n' +
+        '/mybookings - View your bookings\n' +
         '/book - Book a ride\n' +
         '/cancel <id> - Cancel a booking\n' +
         '/help - Show this message\n\n' +

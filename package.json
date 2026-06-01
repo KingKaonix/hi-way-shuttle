@@ -1,18 +1,30 @@
 {
   "name": "hi-way-shuttle",
-  "version": "1.0.0",
-  "description": "Hi-Way-Shuttle — Telegram Mini App, Messenger Bot & Landing Page",
-  "main": "server.js",
+  "version": "2.0.0",
+  "private": true,
+  "description": "Hi-Way-Shuttle — Premium scheduled shuttle service platform",
+  "workspaces": [
+    "packages/shared",
+    "packages/api",
+    "packages/web"
+  ],
   "scripts": {
-    "start": "node server.js",
-    "test": "node test/smoke.js",
-    "docker": "docker build -t hi-way-shuttle . && docker run -p 3000:3000 --env-file .env hi-way-shuttle"
+    "build": "npm run build -w packages/shared && npm run build -w packages/web && npm run build -w packages/api",
+    "dev": "concurrently \"npm run dev -w packages/api\" \"npm run dev -w packages/web\"",
+    "start": "npm run build && npm run start -w packages/api",
+    "setup": "npm run build -w packages/shared && npm run db:migrate && npm run db:seed",
+    "db:migrate": "cd packages/api && npx tsx db/migrate.ts",
+    "db:seed": "cd packages/api && npx tsx db/seed.ts"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.0",
+    "typescript": "^5.7.0"
   },
   "dependencies": {
-    "express": "^4.21.0",
-    "body-parser": "^1.20.3",
-    "dotenv": "^16.4.5",
-    "cors": "^2.8.5",
-    "axios": "^1.7.7"
+    "axios": "^1.16.1",
+    "body-parser": "^2.2.2",
+    "cors": "^2.8.6",
+    "dotenv": "^17.4.2",
+    "playwright": "^1.60.0"
   }
 }

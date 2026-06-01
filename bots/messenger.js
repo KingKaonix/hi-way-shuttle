@@ -84,8 +84,10 @@ function createMessengerBot(pageToken, getBookings, addBooking, cancelBooking, b
       ).join('\n');
       await sendMessage(senderId, { text: `Your Bookings:\n\n${lines}\n\nType "cancel <id>" to cancel a booking.` });
     } else if (lower.startsWith('schedule')) {
-      const name = text.slice(8).trim().toLowerCase();
-      const route = routes.find(r => r.name.toLowerCase().includes(name));
+      const query = text.slice(8).trim().toLowerCase();
+      let route = routes.find(r => r.id.toLowerCase() === query) || routes.find(r => r.name.toLowerCase() === query);
+      if (!route) route = routes.find(r => r.name.toLowerCase().startsWith(query));
+      if (!route) route = routes.find(r => r.name.toLowerCase().includes(query));
       if (!route) return await sendMessage(senderId, { text: 'Route not found. Type "routes" to see options.' });
       const sched = schedules[route.id];
       if (!sched) return await sendMessage(senderId, { text: 'No schedule found.' });
@@ -96,9 +98,11 @@ function createMessengerBot(pageToken, getBookings, addBooking, cancelBooking, b
         text: 'Commands:\n- routes: View all routes\n- schedule [name]: View schedule\n- fare [name]: Check fare\n- book: Book a ride\n- mybookings: View your bookings\n- cancel <id>: Cancel a booking'
       });
     } else if (lower.startsWith('fare')) {
-      const name = text.slice(4).trim().toLowerCase();
-      if (name) {
-        const route = routes.find(r => r.name.toLowerCase().includes(name));
+      const query = text.slice(4).trim().toLowerCase();
+      if (query) {
+        let route = routes.find(r => r.id.toLowerCase() === query) || routes.find(r => r.name.toLowerCase() === query);
+        if (!route) route = routes.find(r => r.name.toLowerCase().startsWith(query));
+        if (!route) route = routes.find(r => r.name.toLowerCase().includes(query));
         const f = route ? fares.routes[route.id] : null;
         if (!route || !f) return await sendMessage(senderId, { text: 'Route not found.' });
         await sendMessage(senderId, { text: `${route.name} Fare: ${fares.currency} ${f.flat_fare.toFixed(2)}` });
@@ -142,8 +146,9 @@ function createMessengerBot(pageToken, getBookings, addBooking, cancelBooking, b
         status: 'confirmed',
         createdAt: new Date().toISOString()
       });
+      const fare_info = fares.routes[routeId];
       await sendMessage(senderId, {
-        text: `✅ Booking Confirmed!\n\nRoute: ${route.name}\nDeparture: ${slot.departure}\nArrival: ${slot.arrival}\nBooking ID: #${booking.id}\n\nThank you for choosing Hi-Way-Shuttle!`
+        text: `✅ Booking Confirmed!\n\nRoute: ${route.name}\nDeparture: ${slot.departure}\nArrival: ${slot.arrival}\nFare: ${fares.currency} ${fare_info ? fare_info.flat_fare.toFixed(2) : 'N/A'}\nBooking ID: #${booking.id}\n\nThank you for choosing Hi-Way-Shuttle!`
       });
     }
   }

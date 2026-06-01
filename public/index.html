@@ -3,985 +3,551 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Hi-Way-Shuttle — Premium Route Shuttle Service</title>
-
-  <!-- Fonts -->
+  <title>Hi-Way-Shuttle — Premium Scheduled Shuttle Service</title>
+  <meta name="description" content="Reliable, scheduled shuttle service for professionals who value punctuality, comfort, and peace of mind.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
-
-  <!-- Tailwind CSS via CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
-
-  <!-- GSAP -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.7/gsap.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.7/ScrollTrigger.min.js"></script>
 
-  <!-- Font Awesome -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
-
   <style>
     :root {
-      --glass-bg: rgba(255, 255, 255, 0.08);
-      --glass-border: rgba(255, 255, 255, 0.15);
-      --glass-shadow: rgba(0, 0, 0, 0.25);
-      --primary: #60a5fa;
-      --primary-dark: #3b82f6;
-      --accent: #a78bfa;
+      --navy-900: #0a1628;
+      --navy-800: #142a47;
+      --navy-700: #1e3a5f;
+      --navy-600: #2d4a7a;
+      --navy-50: #f0f3f8;
+      --gold-400: #e7b433;
+      --gold-500: #c9952b;
+      --gold-600: #a37822;
     }
 
     * { margin: 0; padding: 0; box-sizing: border-box; }
 
     body {
       font-family: 'Inter', sans-serif;
-      background: #0a0f1e;
-      color: #e2e8f0;
+      background: #f8f9fc;
+      color: #1a1a2e;
       overflow-x: hidden;
     }
 
-    /* Animated background grid */
     .grid-bg {
       position: fixed;
       top: 0; left: 0;
       width: 100%; height: 100%;
       background-image:
-        linear-gradient(rgba(96, 165, 250, 0.03) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(96, 165, 250, 0.03) 1px, transparent 1px);
+        linear-gradient(rgba(30, 58, 95, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(30, 58, 95, 0.03) 1px, transparent 1px);
       background-size: 60px 60px;
-      z-index: 0;
-      pointer-events: none;
-    }
-
-    /* Floating orbs */
-    .orb {
-      position: fixed;
-      border-radius: 50%;
-      filter: blur(80px);
       pointer-events: none;
       z-index: 0;
     }
-    .orb-1 {
-      width: 500px; height: 500px;
-      background: radial-gradient(circle, rgba(96, 165, 250, 0.15), transparent 70%);
-      top: -100px; right: -100px;
-    }
-    .orb-2 {
-      width: 400px; height: 400px;
-      background: radial-gradient(circle, rgba(167, 139, 250, 0.12), transparent 70%);
-      bottom: -80px; left: -80px;
-    }
-    .orb-3 {
-      width: 300px; height: 300px;
-      background: radial-gradient(circle, rgba(52, 211, 153, 0.08), transparent 70%);
-      top: 50%; left: 50%;
-      transform: translate(-50%, -50%);
+
+    .glass-card {
+      background: rgba(255, 255, 255, 0.75);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(201, 149, 43, 0.1);
+      border-radius: 1.25rem;
+      box-shadow: 0 4px 24px rgba(0, 0, 0, 0.04);
+      transition: all 0.3s ease;
     }
 
-    /* Glassmorphism card */
-    .glass {
-      background: var(--glass-bg);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-      border: 1px solid var(--glass-border);
-      box-shadow: 0 8px 32px var(--glass-shadow);
-    }
-
-    .glass-strong {
-      background: rgba(255, 255, 255, 0.06);
-      backdrop-filter: blur(24px);
-      -webkit-backdrop-filter: blur(24px);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-    }
-
-    /* Navbar glass */
-    .navbar-glass {
-      background: rgba(10, 15, 30, 0.7);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-    }
-
-    /* Gradient text */
-    .gradient-text {
-      background: linear-gradient(135deg, #60a5fa, #a78bfa, #f472b6);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-    }
-
-    .gradient-text-blue {
-      background: linear-gradient(135deg, #60a5fa, #38bdf8);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-    }
-
-    /* Glow effects */
-    .glow-blue {
-      box-shadow: 0 0 30px rgba(96, 165, 250, 0.3), 0 0 60px rgba(96, 165, 250, 0.1);
-    }
-    .glow-purple {
-      box-shadow: 0 0 30px rgba(167, 139, 250, 0.3), 0 0 60px rgba(167, 139, 250, 0.1);
-    }
-
-    /* Route card 3D hover */
-    .route-card {
-      transition: transform 0.5s cubic-bezier(0.23, 1, 0.32, 1),
-                  box-shadow 0.5s cubic-bezier(0.23, 1, 0.32, 1);
-      transform-style: preserve-3d;
-      perspective: 800px;
-    }
-    .route-card:hover {
-      transform: translateY(-8px) rotateX(2deg) rotateY(-2deg);
-      box-shadow: 0 20px 60px rgba(96, 165, 250, 0.15), 0 0 40px rgba(96, 165, 250, 0.05);
-    }
-
-    /* Time slot button */
-    .time-slot {
-      transition: all 0.3s cubic-bezier(0.23, 1, 0.32, 1);
-    }
-    .time-slot:hover {
+    .glass-card:hover {
+      border-color: rgba(201, 149, 43, 0.25);
+      box-shadow: 0 8px 32px rgba(201, 149, 43, 0.08);
       transform: translateY(-2px);
-      box-shadow: 0 8px 25px rgba(96, 165, 250, 0.2);
-    }
-    .time-slot:active {
-      transform: scale(0.97);
     }
 
-    /* Step indicator */
-    .step-dot {
-      transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
-    }
-    .step-dot.active {
-      box-shadow: 0 0 20px rgba(96, 165, 250, 0.5);
-    }
-
-    /* Booking card */
-    .booking-card {
-      transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
-    }
-    .booking-card:hover {
-      transform: translateY(-4px);
-      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
-    }
-
-    /* Shimmer loading */
-    .shimmer {
-      background: linear-gradient(90deg,
-        rgba(255,255,255,0.03) 25%,
-        rgba(255,255,255,0.08) 50%,
-        rgba(255,255,255,0.03) 75%);
-      background-size: 200% 100%;
-      animation: shimmer 2s infinite;
-    }
-    @keyframes shimmer {
-      0% { background-position: 200% 0; }
-      100% { background-position: -200% 0; }
-    }
-
-    /* Scrollbar */
-    ::-webkit-scrollbar { width: 6px; }
-    ::-webkit-scrollbar-track { background: rgba(255,255,255,0.02); }
-    ::-webkit-scrollbar-thumb { background: rgba(96,165,250,0.3); border-radius: 3px; }
-    ::-webkit-scrollbar-thumb:hover { background: rgba(96,165,250,0.5); }
-
-    /* Custom tab underline */
-    .tab-underline {
+    .nav-link {
       position: relative;
-    }
-    .tab-underline::after {
-      content: '';
-      position: absolute;
-      bottom: -2px;
-      left: 0;
-      width: 100%;
-      height: 2px;
-      background: linear-gradient(90deg, #60a5fa, #a78bfa);
-      transform: scaleX(0);
-      transition: transform 0.3s ease;
-      transform-origin: left;
-    }
-    .tab-underline.active::after {
-      transform: scaleX(1);
+      color: #64748b;
+      text-decoration: none;
+      font-size: 0.875rem;
+      font-weight: 500;
+      padding: 0.5rem 0.75rem;
+      border-radius: 0.625rem;
+      transition: all 0.2s ease;
     }
 
-    /* Notification toast */
-    .toast {
-      animation: slideUp 0.4s cubic-bezier(0.23, 1, 0.32, 1) forwards;
-    }
-    @keyframes slideUp {
-      from { opacity: 0; transform: translateY(20px) scale(0.95); }
-      to { opacity: 1; transform: translateY(0) scale(1); }
+    .nav-link:hover {
+      color: #1e3a5f;
+      background: rgba(30, 58, 95, 0.06);
     }
 
-    @media (prefers-reduced-motion: reduce) {
-      *, *::before, *::after {
-        animation-duration: 0.01ms !important;
-        transition-duration: 0.01ms !important;
-      }
+    .btn-gold {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      padding: 0.75rem 1.5rem;
+      border-radius: 0.75rem;
+      background: linear-gradient(135deg, #c9952b, #a37822);
+      color: white;
+      font-weight: 600;
+      font-size: 0.875rem;
+      border: none;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 16px rgba(201, 149, 43, 0.25);
+      text-decoration: none;
     }
+
+    .btn-gold:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 8px 24px rgba(201, 149, 43, 0.35);
+    }
+
+    .btn-outline {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      padding: 0.75rem 1.5rem;
+      border-radius: 0.75rem;
+      background: transparent;
+      color: #1e3a5f;
+      font-weight: 600;
+      font-size: 0.875rem;
+      border: 1.5px solid #d1d9e6;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-decoration: none;
+    }
+
+    .btn-outline:hover {
+      border-color: #c9952b;
+      color: #c9952b;
+      background: rgba(201, 149, 43, 0.04);
+    }
+
+    .hero-gradient {
+      background: linear-gradient(135deg, #0a1628 0%, #142a47 50%, #1e3a5f 100%);
+    }
+
+    .text-gradient {
+      background: linear-gradient(135deg, #e7b433, #c9952b);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .section-title {
+      font-size: 1.875rem;
+      font-weight: 800;
+      color: #0a1628;
+      letter-spacing: -0.025em;
+    }
+
+    @media (min-width: 640px) {
+      .section-title { font-size: 2.25rem; }
+    }
+
+    .timeline-dot {
+      width: 10px; height: 10px;
+      border-radius: 50%;
+      border: 2px solid rgba(201, 149, 43, 0.3);
+      flex-shrink: 0;
+    }
+
+    .timeline-line {
+      width: 2px;
+      flex: 1;
+      background: linear-gradient(to bottom, rgba(201, 149, 43, 0.3), rgba(30, 58, 95, 0.15));
+      margin-left: 4px;
+    }
+
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .animate-up {
+      animation: fadeInUp 0.6s ease-out forwards;
+    }
+
+    .animate-up-delay-1 { animation-delay: 0.1s; }
+    .animate-up-delay-2 { animation-delay: 0.2s; }
+    .animate-up-delay-3 { animation-delay: 0.3s; }
   </style>
 </head>
 <body>
-
-  <!-- Background layers -->
   <div class="grid-bg"></div>
-  <div class="orb orb-1" id="orb1"></div>
-  <div class="orb orb-2" id="orb2"></div>
-  <div class="orb orb-3" id="orb3"></div>
 
-  <!-- Navbar -->
-  <nav class="navbar-glass fixed top-0 left-0 right-0 z-50 px-6 py-4" id="navbar">
-    <div class="max-w-6xl mx-auto flex items-center justify-between">
-      <div class="flex items-center gap-3">
-        <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center text-white text-sm font-bold shadow-lg">
-          <i class="fa-solid fa-bus text-sm"></i>
+  <!-- Navigation -->
+  <nav class="fixed top-0 left-0 right-0 z-50" style="background: rgba(10, 22, 40, 0.92); backdrop-filter: blur(12px); border-bottom: 1px solid rgba(30, 58, 95, 0.5);">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex justify-between h-16 items-center">
+        <a href="/" class="flex items-center gap-2.5 no-underline">
+          <div class="w-9 h-10 flex-shrink-0 relative">
+            <!-- SVG logo icon -->
+          </div>
+          <span class="font-bold text-lg text-white" style="letter-spacing: -0.02em;">
+            Hi-Way<span style="color: #e7b433;">Shuttle</span>
+          </span>
+        </a>
+
+        <div class="hidden md:flex items-center gap-1">
+          <a href="/" class="nav-link" style="color: #e7b433;">Home</a>
+          <a href="/#routes" class="nav-link" style="color: #94a3b8;">Routes</a>
+          <a href="/#booking" class="nav-link" style="color: #94a3b8;">Book Now</a>
+          <a href="/login" class="nav-link" style="color: #94a3b8;">Sign In</a>
+          <a href="/register" class="btn-gold ml-3" style="padding: 0.5rem 1rem; font-size: 0.8125rem;">
+            <i class="fas fa-user-plus"></i> Get Started
+          </a>
         </div>
-        <span class="text-white font-bold text-lg tracking-tight">Hi-Way<span class="text-blue-400">Shuttle</span></span>
+
+        <!-- Mobile menu button -->
+        <button id="mobile-menu-btn" class="md:hidden text-navy-200 p-2 rounded-lg hover:bg-navy-700/50 transition-all">
+          <i class="fas fa-bars text-lg"></i>
+        </button>
       </div>
-      <div class="hidden md:flex items-center gap-8 text-sm text-gray-300">
-        <a href="#routes" class="hover:text-white transition-colors">Routes</a>
-        <a href="#schedule" class="hover:text-white transition-colors">Schedule</a>
-        <a href="#fares" class="hover:text-white transition-colors">Fares</a>
-        <a href="#book" class="hover:text-white transition-colors">Book</a>
-        <button onclick="showMyBookings()" class="hover:text-white transition-colors">My Bookings</button>
-      </div>
-      <button onclick="toggleMobileMenu()" class="md:hidden text-white text-xl">
-        <i class="fa-solid fa-bars"></i>
-      </button>
+    </div>
+
+    <!-- Mobile menu -->
+    <div id="mobile-menu" class="hidden md:hidden px-4 pb-4" style="border-top: 1px solid rgba(30, 58, 95, 0.5);">
+      <a href="/" class="block py-2.5 text-sm font-medium" style="color: #e7b433;">Home</a>
+      <a href="/#routes" class="block py-2.5 text-sm font-medium" style="color: #94a3b8;">Routes</a>
+      <a href="/#booking" class="block py-2.5 text-sm font-medium" style="color: #94a3b8;">Book Now</a>
+      <a href="/login" class="block py-2.5 text-sm font-medium" style="color: #94a3b8;">Sign In</a>
+      <a href="/register" class="btn-gold mt-2 text-center" style="padding: 0.625rem 1rem;">Get Started</a>
     </div>
   </nav>
 
-  <!-- Mobile menu -->
-  <div id="mobileMenu" class="fixed top-16 left-4 right-4 z-40 glass-strong rounded-2xl p-6 hidden">
-    <div class="flex flex-col gap-4 text-gray-300">
-      <a href="#routes" onclick="toggleMobileMenu()" class="hover:text-white transition-colors">Routes</a>
-      <a href="#schedule" onclick="toggleMobileMenu()" class="hover:text-white transition-colors">Schedule</a>
-      <a href="#fares" onclick="toggleMobileMenu()" class="hover:text-white transition-colors">Fares</a>
-      <a href="#book" onclick="toggleMobileMenu()" class="hover:text-white transition-colors">Book</a>
-      <button onclick="toggleMobileMenu(); showMyBookings()" class="text-left hover:text-white transition-colors">My Bookings</button>
+  <!-- Hero -->
+  <section class="hero-gradient min-h-screen flex items-center relative overflow-hidden">
+    <div class="absolute inset-0 opacity-[0.04]" style="background-image: radial-gradient(circle at 25% 25%, #fff 1px, transparent 1px), radial-gradient(circle at 75% 75%, #fff 1px, transparent 1px); background-size: 60px 60px;"></div>
+    <div class="absolute -top-40 -right-40 w-96 h-96 rounded-full" style="background: rgba(231, 180, 51, 0.08); filter: blur(80px);"></div>
+    <div class="absolute -bottom-40 -left-40 w-96 h-96 rounded-full" style="background: rgba(30, 58, 95, 0.15); filter: blur(80px);"></div>
+
+    <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-32 w-full">
+      <div class="max-w-3xl animate-up">
+        <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium mb-6" style="background: rgba(231, 180, 51, 0.1); border: 1px solid rgba(231, 180, 51, 0.2); color: #e7b433;">
+          <i class="fas fa-star text-[10px]"></i>
+          Premium Transportation Service
+        </div>
+
+        <h1 class="text-4xl sm:text-5xl lg:text-6xl font-black text-white leading-tight" style="letter-spacing: -0.03em;">
+          Your Commute,<br>
+          <span class="text-gradient">Elevated</span>
+        </h1>
+
+        <p class="mt-4 text-lg sm:text-xl max-w-2xl" style="color: #94a3b8; line-height: 1.7;">
+          Reliable, scheduled shuttle service designed for professionals who value
+          punctuality, comfort, and peace of mind.
+        </p>
+
+        <div class="flex flex-wrap gap-3 mt-8">
+          <a href="/register" class="btn-gold !px-6 !py-3 !text-base">
+            Get Started <i class="fas fa-arrow-right text-sm"></i>
+          </a>
+          <a href="/#routes" class="btn-outline !px-6 !py-3 !text-base" style="border-color: rgba(148, 163, 184, 0.3); color: #94a3b8;">
+            View Routes
+          </a>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-6 mt-10 pt-8" style="border-top: 1px solid rgba(30, 58, 95, 0.5);">
+          <div class="flex items-center gap-2 text-sm" style="color: #64748b;">
+            <i class="fas fa-shield-alt" style="color: #e7b433;"></i> Reliable & On-Time
+          </div>
+          <div class="flex items-center gap-2 text-sm" style="color: #64748b;">
+            <i class="fas fa-users" style="color: #e7b433;"></i> Professional Drivers
+          </div>
+          <div class="flex items-center gap-2 text-sm" style="color: #64748b;">
+            <i class="fas fa-star" style="color: #e7b433;"></i> 5-Star Service
+          </div>
+        </div>
+      </div>
     </div>
-  </div>
+  </section>
 
-  <!-- Toast container -->
-  <div id="toastContainer" class="fixed bottom-8 right-8 z-50 flex flex-col gap-3"></div>
-
-  <!-- ========== HERO ========== -->
-  <section class="relative min-h-screen flex items-center justify-center px-6 pt-20" id="hero">
-    <div class="max-w-4xl mx-auto text-center relative z-10">
-      <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full glass text-sm text-blue-300 mb-8" id="heroBadge">
-        <span class="w-2 h-2 rounded-full bg-green-400 animate-pulse"></span>
-        <span>Scheduled Route Shuttle Service</span>
+  <!-- Stats Strip -->
+  <section class="relative -mt-8 z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div class="glass-card p-6 text-center">
+        <div class="w-12 h-12 rounded-xl flex items-center justify-center mx-auto mb-3" style="background: linear-gradient(135deg, #f0f3f8, #e2e8f0);">
+          <i class="fas fa-route" style="color: #1e3a5f;"></i>
+        </div>
+        <div class="text-3xl font-bold" style="color: #0a1628;" id="stat-routes">—</div>
+        <div class="text-sm font-medium mt-0.5" style="color: #64748b;">Routes</div>
+        <div class="text-xs mt-1" style="color: #94a3b8;">Scheduled daily</div>
       </div>
 
-      <h1 class="text-5xl md:text-7xl lg:text-8xl font-black leading-[1.1] mb-6" id="heroTitle">
-        <span class="gradient-text">Hi-Way-Shuttle</span>
-      </h1>
+      <div class="glass-card p-6 text-center">
+        <div class="w-12 h-12 rounded-xl flex items-center justify-center mx-auto mb-3" style="background: linear-gradient(135deg, #f0f3f8, #e2e8f0);">
+          <i class="fas fa-calendar-day" style="color: #1e3a5f;"></i>
+        </div>
+        <div class="text-3xl font-bold" style="color: #0a1628;" id="stat-trips">—</div>
+        <div class="text-sm font-medium mt-0.5" style="color: #64748b;">Trips Today</div>
+        <div class="text-xs mt-1" style="color: #94a3b8;">On schedule</div>
+      </div>
 
-      <p class="text-lg md:text-xl text-gray-400 max-w-2xl mx-auto mb-10 leading-relaxed" id="heroSub">
-        Reliable, scheduled shuttle service connecting downtown, airport, and university routes.<br>
-        Book your ride in seconds — no account needed.
+      <div class="glass-card p-6 text-center">
+        <div class="w-12 h-12 rounded-xl flex items-center justify-center mx-auto mb-3" style="background: linear-gradient(135deg, #f0f3f8, #e2e8f0);">
+          <i class="fas fa-users" style="color: #1e3a5f;"></i>
+        </div>
+        <div class="text-3xl font-bold" style="color: #0a1628;" id="stat-seats">—</div>
+        <div class="text-sm font-medium mt-0.5" style="color: #64748b;">Seats Available</div>
+        <div class="text-xs mt-1" style="color: #94a3b8;">Across all routes</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Routes Section -->
+  <section id="routes" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24">
+    <div class="text-center mb-12">
+      <h2 class="section-title">Our Routes</h2>
+      <p class="text-lg mt-3" style="color: #64748b; max-width: 600px; margin-left: auto; margin-right: auto;">
+        Carefully planned routes connecting key destinations throughout the city.
       </p>
-
-      <div class="flex flex-col sm:flex-row items-center justify-center gap-4" id="heroCta">
-        <a href="#book" class="px-8 py-4 rounded-2xl bg-gradient-to-r from-blue-500 to-purple-600 text-white font-semibold text-sm glow-blue hover:shadow-xl hover:shadow-blue-500/25 transition-all duration-300 hover:-translate-y-1">
-          <i class="fa-solid fa-ticket mr-2"></i>Book a Ride
-        </a>
-        <a href="#routes" class="px-8 py-4 rounded-2xl glass text-white font-semibold text-sm hover:bg-white/10 transition-all duration-300">
-          <i class="fa-solid fa-route mr-2"></i>View Routes
-        </a>
-      </div>
-
-      <!-- Stats -->
-      <div class="grid grid-cols-3 gap-6 mt-16 max-w-lg mx-auto" id="heroStats">
-        <div class="glass rounded-2xl p-4">
-          <div class="text-2xl font-bold text-white" id="statRoutes">3</div>
-          <div class="text-xs text-gray-400 mt-1">Routes</div>
-        </div>
-        <div class="glass rounded-2xl p-4">
-          <div class="text-2xl font-bold text-white" id="statSchedules">24</div>
-          <div class="text-xs text-gray-400 mt-1">Daily Trips</div>
-        </div>
-        <div class="glass rounded-2xl p-4">
-          <div class="text-2xl font-bold text-white" id="statFare">$3.50</div>
-          <div class="text-xs text-gray-400 mt-1">Base Fare</div>
-        </div>
-      </div>
     </div>
 
-    <!-- Scroll indicator -->
-    <div class="absolute bottom-8 left-1/2 -translate-x-1/2 text-gray-500 animate-bounce">
-      <i class="fa-solid fa-chevron-down text-xl"></i>
+    <div id="routes-container" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+      <!-- Populated by JS -->
     </div>
   </section>
 
-  <!-- ========== ROUTES ========== -->
-  <section class="relative py-24 px-6" id="routes">
-    <div class="max-w-6xl mx-auto">
-      <div class="text-center mb-16 reveal">
-        <span class="text-blue-400 text-sm font-semibold tracking-widest uppercase">Our Routes</span>
-        <h2 class="text-4xl md:text-5xl font-bold text-white mt-3">Choose Your Route</h2>
-        <p class="text-gray-400 mt-3 max-w-xl mx-auto">Three dedicated routes covering the most important destinations in the city.</p>
-      </div>
-
-      <div class="grid md:grid-cols-3 gap-6" id="routesContainer">
-        <!-- Loaded dynamically -->
-      </div>
+  <!-- Why Choose Us -->
+  <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-24">
+    <div class="text-center mb-12">
+      <h2 class="section-title">Why Choose Us</h2>
+      <p class="text-lg mt-3" style="color: #64748b; max-width: 600px; margin-left: auto; margin-right: auto;">
+        We redefine your daily commute with premium service and attention to detail.
+      </p>
     </div>
-  </section>
 
-  <!-- ========== SCHEDULE ========== -->
-  <section class="relative py-24 px-6" id="schedule">
-    <div class="max-w-5xl mx-auto">
-      <div class="text-center mb-16 reveal">
-        <span class="text-purple-400 text-sm font-semibold tracking-widest uppercase">Schedule</span>
-        <h2 class="text-4xl md:text-5xl font-bold text-white mt-3">Departure Times</h2>
-        <p class="text-gray-400 mt-3 max-w-xl mx-auto">View departure and arrival times for each route.</p>
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div class="glass-card p-6 text-center group hover:-translate-y-1 transition-all duration-300">
+        <div class="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-4 transition-all duration-300" style="background: linear-gradient(135deg, rgba(201, 149, 43, 0.1), rgba(201, 149, 43, 0.05));">
+          <i class="fas fa-clock text-xl" style="color: #c9952b;"></i>
+        </div>
+        <h3 class="font-semibold text-lg mb-1" style="color: #0a1628;">On-Time Guarantee</h3>
+        <p class="text-sm" style="color: #64748b;">Scheduled departures with real-time tracking so you're never left waiting.</p>
       </div>
 
-      <!-- Tabs -->
-      <div class="flex justify-center gap-1 mb-10" id="scheduleTabs"></div>
-
-      <!-- Schedule content -->
-      <div class="glass-strong rounded-3xl p-6 md:p-8 min-h-[300px] reveal" id="scheduleContent">
-        <div class="flex items-center justify-center h-64 text-gray-500">
-          <i class="fa-solid fa-spinner fa-spin text-2xl mr-3"></i>Loading schedules...
+      <div class="glass-card p-6 text-center group hover:-translate-y-1 transition-all duration-300">
+        <div class="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-4" style="background: linear-gradient(135deg, rgba(201, 149, 43, 0.1), rgba(201, 149, 43, 0.05));">
+          <i class="fas fa-shield-alt text-xl" style="color: #c9952b;"></i>
         </div>
+        <h3 class="font-semibold text-lg mb-1" style="color: #0a1628;">Safety First</h3>
+        <p class="text-sm" style="color: #64748b;">Professionally vetted drivers and well-maintained vehicles for peace of mind.</p>
+      </div>
+
+      <div class="glass-card p-6 text-center group hover:-translate-y-1 transition-all duration-300">
+        <div class="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-4" style="background: linear-gradient(135deg, rgba(201, 149, 43, 0.1), rgba(201, 149, 43, 0.05));">
+          <i class="fas fa-mobile-alt text-xl" style="color: #c9952b;"></i>
+        </div>
+        <h3 class="font-semibold text-lg mb-1" style="color: #0a1628;">Easy Booking</h3>
+        <p class="text-sm" style="color: #64748b;">Book via web, Telegram, or Messenger. Manage reservations in seconds.</p>
+      </div>
+
+      <div class="glass-card p-6 text-center group hover:-translate-y-1 transition-all duration-300">
+        <div class="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-4" style="background: linear-gradient(135deg, rgba(201, 149, 43, 0.1), rgba(201, 149, 43, 0.05));">
+          <i class="fas fa-wifi text-xl" style="color: #c9952b;"></i>
+        </div>
+        <h3 class="font-semibold text-lg mb-1" style="color: #0a1628;">Premium Comfort</h3>
+        <p class="text-sm" style="color: #64748b;">Spacious seating, WiFi, and climate control for a productive commute.</p>
       </div>
     </div>
   </section>
 
-  <!-- ========== FARES ========== -->
-  <section class="relative py-24 px-6" id="fares">
-    <div class="max-w-5xl mx-auto">
-      <div class="text-center mb-16 reveal">
-        <span class="text-emerald-400 text-sm font-semibold tracking-widest uppercase">Pricing</span>
-        <h2 class="text-4xl md:text-5xl font-bold text-white mt-3">Simple, Transparent Fares</h2>
-        <p class="text-gray-400 mt-3 max-w-xl mx-auto">Flat-rate pricing per route. No hidden fees.</p>
-      </div>
+  <!-- Pricing / Fares -->
+  <section id="booking" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-24">
+    <div class="text-center mb-12">
+      <h2 class="section-title">Simple, Transparent Pricing</h2>
+      <p class="text-lg mt-3" style="color: #64748b; max-width: 600px; margin-left: auto; margin-right: auto;">
+        No hidden fees. What you see is what you pay.
+      </p>
+    </div>
 
-      <div class="grid md:grid-cols-3 gap-6" id="faresContainer">
-        <!-- Loaded dynamically -->
-      </div>
+    <div class="max-w-2xl mx-auto" id="fares-container">
+      <!-- Populated by JS -->
     </div>
   </section>
 
-  <!-- ========== BOOK ========== -->
-  <section class="relative py-24 px-6" id="book">
-    <div class="max-w-3xl mx-auto">
-      <div class="text-center mb-16 reveal">
-        <span class="text-pink-400 text-sm font-semibold tracking-widest uppercase">Book a Ride</span>
-        <h2 class="text-4xl md:text-5xl font-bold text-white mt-3">Your Trip, Confirmed</h2>
-        <p class="text-gray-400 mt-3 max-w-xl mx-auto">Three simple steps to book your shuttle.</p>
-      </div>
+  <!-- CTA Section -->
+  <section class="hero-gradient relative overflow-hidden" style="background: linear-gradient(135deg, #0a1628, #142a47);">
+    <div class="absolute inset-0 opacity-[0.04]" style="background-image: radial-gradient(circle at 50% 50%, #fff 1px, transparent 1px); background-size: 40px 40px;"></div>
+    <div class="absolute top-0 left-1/2 -translate-x-1/2 w-full h-px" style="background: linear-gradient(to right, transparent, rgba(231, 180, 51, 0.3), transparent);"></div>
 
-      <!-- Steps indicator -->
-      <div class="flex items-center justify-center gap-4 mb-10" id="bookingSteps">
-        <div class="step-dot active w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center text-white text-sm font-bold">1</div>
-        <div class="h-px w-16 bg-gray-700"></div>
-        <div class="step-dot w-10 h-10 rounded-full bg-gray-800 flex items-center justify-center text-gray-400 text-sm font-bold">2</div>
-        <div class="h-px w-16 bg-gray-700"></div>
-        <div class="step-dot w-10 h-10 rounded-full bg-gray-800 flex items-center justify-center text-gray-400 text-sm font-bold">3</div>
-      </div>
-
-      <!-- Booking content -->
-      <div class="glass-strong rounded-3xl p-6 md:p-8 min-h-[300px]" id="bookingContent">
-        <!-- Loaded dynamically -->
-      </div>
+    <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 text-center">
+      <svg viewBox="0 0 44 48" fill="none" class="w-10 h-11 mx-auto mb-4"><defs><linearGradient id="cta-gld" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#e7b433"/><stop offset="100%" stop-color="#c9952b"/></linearGradient></defs><rect x="1" y="1" width="42" height="46" rx="10" fill="#1e3a5f" stroke="url(#cta-gld)" stroke-width="1.5"/><path d="M12 16V36M12 26H22M22 16V36M32 16V36M32 26H22" stroke="url(#cta-gld)" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M32 26Q35.5 26 37 29.5L40 33.5" stroke="#e7b433" stroke-width="1.8" stroke-linecap="round" opacity="0.5"/></svg>
+      <h2 class="text-3xl sm:text-4xl font-bold text-white mb-3">Ready to Ride?</h2>
+      <p class="text-lg max-w-xl mx-auto mb-8" style="color: #94a3b8;">
+        Join hundreds of professionals who choose Hi-Way-Shuttle for their daily commute.
+      </p>
+      <a href="/register" class="btn-gold !px-8 !py-3 !text-base" style="box-shadow: 0 8px 32px rgba(201, 149, 43, 0.3);">
+        <i class="fas fa-ticket-alt"></i> Create Free Account
+      </a>
     </div>
   </section>
 
-  <!-- ========== MY BOOKINGS MODAL ========== -->
-  <div id="bookingsModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 hidden" onclick="closeBookingsModal(event)">
-    <div class="absolute inset-0 bg-black/60 backdrop-blur-sm"></div>
-    <div class="relative glass-strong rounded-3xl p-6 md:p-8 w-full max-w-lg max-h-[80vh] overflow-y-auto" onclick="event.stopPropagation()">
-      <div class="flex items-center justify-between mb-6">
-        <h3 class="text-xl font-bold text-white">My Bookings</h3>
-        <button onclick="closeBookingsModal()" class="text-gray-400 hover:text-white transition-colors text-xl">
-          <i class="fa-solid fa-xmark"></i>
-        </button>
-      </div>
-      <div id="bookingsList">
-        <div class="text-center text-gray-500 py-12">
-          <i class="fa-solid fa-ticket text-4xl mb-4 text-gray-700"></i>
-          <p>No bookings yet.</p>
-          <p class="text-sm mt-1">Book a ride to get started!</p>
+  <!-- Footer -->
+  <footer style="background: #060e1a; border-top: 1px solid rgba(30, 58, 95, 0.5);">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div>
+          <a href="/" class="flex items-center gap-2 mb-3 no-underline">
+            <div class="w-8 h-9 flex-shrink-0 relative">
+              <i class="fas fa-bus text-white text-xs"></i>
+            </div>
+            <span class="font-bold text-white">Hi-Way<span style="color: #e7b433;">Shuttle</span></span>
+          </a>
+          <p class="text-sm leading-relaxed" style="color: #64748b;">
+            Premium scheduled shuttle service connecting your daily commute with comfort and reliability.
+          </p>
+        </div>
+        <div>
+          <h4 class="text-white font-semibold text-sm mb-3">Quick Links</h4>
+          <div class="space-y-2">
+            <a href="/" class="block text-sm no-underline" style="color: #64748b;">Home</a>
+            <a href="/#routes" class="block text-sm no-underline" style="color: #64748b;">Routes</a>
+            <a href="/register" class="block text-sm no-underline" style="color: #64748b;">Get Started</a>
+          </div>
+        </div>
+        <div>
+          <h4 class="text-white font-semibold text-sm mb-3">Contact</h4>
+          <div class="space-y-2 text-sm" style="color: #64748b;">
+            <p>support@hiwayshuttle.com</p>
+            <p>1-800-HI-WAY</p>
+            <p class="text-xs" style="color: #475569;">Available 6 AM – 10 PM EST</p>
+          </div>
         </div>
       </div>
-    </div>
-  </div>
-
-  <!-- ========== FOOTER ========== -->
-  <footer class="relative py-12 px-6 border-t border-white/5">
-    <div class="max-w-6xl mx-auto text-center">
-      <div class="flex items-center justify-center gap-3 mb-4">
-        <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center text-white text-xs font-bold">
-          <i class="fa-solid fa-bus text-xs"></i>
-        </div>
-        <span class="text-white font-bold">Hi-Way<span class="text-blue-400">Shuttle</span></span>
+      <div class="text-center text-xs mt-8 pt-6" style="border-top: 1px solid rgba(30, 58, 95, 0.5); color: #475569;">
+        &copy; 2026 Hi-Way-Shuttle. All rights reserved. Premium scheduled shuttle service.
       </div>
-      <p class="text-gray-500 text-sm">Scheduled route shuttle service &mdash; Book via Telegram, Messenger, or Web</p>
-      <p class="text-gray-600 text-xs mt-4">&copy; 2026 Hi-Way-Shuttle. All rights reserved.</p>
     </div>
   </footer>
 
   <script>
-    const API = window.location.origin + '/api';
-    let routes = [];
-    let fares = {};
-    let schedules = {};
-    let activeScheduleTab = null;
-    let bookingState = { routeId: null, slotIdx: null };
-
-    // ========== Init ==========
-    async function init() {
-      try {
-        const [rR, fR] = await Promise.all([
-          fetch(API + '/routes'),
-          fetch(API + '/fares')
-        ]);
-        routes = await rR.json();
-        fares = await fR.json();
-
-        // Load all schedules
-        await Promise.all(routes.map(async (r) => {
-          try {
-            const s = await fetch(API + '/schedules/' + r.id);
-            schedules[r.id] = await s.json();
-          } catch(e) {
-            schedules[r.id] = [];
-          }
-        }));
-
-        renderRoutes();
-        renderFares();
-        renderScheduleTabs();
-        renderBookingStep1();
-        updateHeroStats();
-        initAnimations();
-      } catch(e) {
-        console.error('Init error:', e);
-        document.getElementById('routesContainer').innerHTML =
-          '<div class="col-span-3 text-center text-gray-500 py-12">Failed to load data. Make sure the API server is running.</div>';
-      }
-    }
-
-    // ========== Animations ==========
-    function initAnimations() {
-      // Ensure GSAP is loaded
-      if (typeof gsap === 'undefined') return;
-
-      gsap.registerPlugin(ScrollTrigger);
-
-      // Hero entrance
-      gsap.from('#heroBadge', { y: 30, opacity: 0, duration: 0.8, ease: 'power3.out' });
-      gsap.from('#heroTitle', { y: 50, opacity: 0, duration: 1, delay: 0.2, ease: 'power3.out' });
-      gsap.from('#heroSub', { y: 40, opacity: 0, duration: 0.8, delay: 0.4, ease: 'power3.out' });
-      gsap.from('#heroCta', { y: 30, opacity: 0, duration: 0.8, delay: 0.6, ease: 'power3.out' });
-      gsap.from('#heroStats', { y: 30, opacity: 0, duration: 0.8, delay: 0.8, ease: 'power3.out' });
-
-      // Reveal sections on scroll
-      document.querySelectorAll('.reveal').forEach((el, i) => {
-        gsap.from(el, {
-          scrollTrigger: { trigger: el, start: 'top 85%', toggleActions: 'play none none none' },
-          y: 50, opacity: 0, duration: 0.8, delay: i * 0.1, ease: 'power3.out'
-        });
-      });
-
-      // Route cards staggered
-      gsap.from('.route-card-anim', {
-        scrollTrigger: { trigger: '#routesContainer', start: 'top 80%', toggleActions: 'play none none none' },
-        y: 60, opacity: 0, duration: 0.7, stagger: 0.15, ease: 'power3.out'
-      });
-
-      // Fare cards staggered
-      gsap.from('.fare-card-anim', {
-        scrollTrigger: { trigger: '#faresContainer', start: 'top 80%', toggleActions: 'play none none none' },
-        y: 60, opacity: 0, duration: 0.7, stagger: 0.15, ease: 'power3.out'
-      });
-
-      // Parallax orbs
-      gsap.to('#orb1', {
-        scrollTrigger: { trigger: 'body', start: 'top top', end: 'bottom bottom', scrub: 1 },
-        y: 200, x: -100, scale: 1.2
-      });
-      gsap.to('#orb2', {
-        scrollTrigger: { trigger: 'body', start: 'top top', end: 'bottom bottom', scrub: 1 },
-        y: -150, x: 100
-      });
-
-      // Navbar hide/show on scroll
-      let lastScroll = 0;
-      window.addEventListener('scroll', () => {
-        const curr = window.scrollY;
-        const nav = document.getElementById('navbar');
-        if (curr > 100) {
-          nav.style.transform = curr > lastScroll ? 'translateY(-100%)' : 'translateY(0)';
-        } else {
-          nav.style.transform = 'translateY(0)';
-        }
-        lastScroll = curr;
-      }, { passive: true });
-    }
-
-    // ========== Render Routes ==========
-    function renderRoutes() {
-      const container = document.getElementById('routesContainer');
-      const colors = [
-        { from: 'from-blue-500/20', via: 'via-cyan-500/10', border: 'border-blue-500/20', text: 'text-blue-300', icon: 'fa-road', gradient: 'from-blue-500 to-cyan-500' },
-        { from: 'from-purple-500/20', via: 'via-pink-500/10', border: 'border-purple-500/20', text: 'text-purple-300', icon: 'fa-plane', gradient: 'from-purple-500 to-pink-500' },
-        { from: 'from-emerald-500/20', via: 'via-teal-500/10', border: 'border-emerald-500/20', text: 'text-emerald-300', icon: 'fa-graduation-cap', gradient: 'from-emerald-500 to-teal-500' }
-      ];
-
-      container.innerHTML = routes.map((r, i) => {
-        const c = colors[i] || colors[0];
-        const f = fares.routes[r.id];
-        return `
-          <div class="route-card glass-strong rounded-3xl p-6 route-card-anim">
-            <div class="flex items-center gap-3 mb-4">
-              <div class="w-10 h-10 rounded-xl bg-gradient-to-br ${c.gradient} flex items-center justify-center text-white">
-                <i class="fa-solid ${c.icon}"></i>
-              </div>
-              <h3 class="text-lg font-bold text-white">${r.name}</h3>
-            </div>
-            <p class="text-sm text-gray-400 mb-4">${r.description}</p>
-            <div class="space-y-2 mb-4">
-              ${r.stops.map(s => `
-                <div class="flex items-center gap-3 text-sm">
-                  <div class="w-2 h-2 rounded-full ${c.text}"></div>
-                  <span class="text-gray-300">${s}</span>
-                </div>
-              `).join('')}
-            </div>
-            <div class="flex items-center justify-between pt-4 border-t border-white/5">
-              <span class="text-sm ${c.text} font-semibold">${fares.currency} ${f ? f.flat_fare.toFixed(2) : fares.base_fare.toFixed(2)}</span>
-              <button onclick="scrollToSchedule('${r.id}')" class="text-xs text-gray-400 hover:text-white transition-colors">
-                View Schedule <i class="fa-solid fa-arrow-right ml-1"></i>
-              </button>
-            </div>
-          </div>
-        `;
-      }).join('');
-    }
-
-    // ========== Render Schedules ==========
-    function renderScheduleTabs() {
-      const container = document.getElementById('scheduleTabs');
-      if (routes.length === 0) return;
-
-      container.innerHTML = routes.map((r, i) => `
-        <button onclick="switchScheduleTab('${r.id}')"
-          class="tab-underline px-5 py-2.5 text-sm font-medium transition-colors rounded-xl
-            ${activeScheduleTab === r.id ? 'active text-white bg-white/5' : 'text-gray-400 hover:text-white'}">
-          ${r.name}
-        </button>
-      `).join('');
-
-      if (!activeScheduleTab) activeScheduleTab = routes[0].id;
-      switchScheduleTab(activeScheduleTab);
-    }
-
-    function switchScheduleTab(routeId) {
-      activeScheduleTab = routeId;
-      document.querySelectorAll('#scheduleTabs button').forEach(btn => {
-        btn.classList.toggle('text-white', btn.textContent.trim() === routes.find(r => r.id === routeId)?.name);
-        btn.classList.toggle('bg-white/5', btn.textContent.trim() === routes.find(r => r.id === routeId)?.name);
-        btn.classList.toggle('text-gray-400', btn.textContent.trim() !== routes.find(r => r.id === routeId)?.name);
-        btn.classList.toggle('active', btn.textContent.trim() === routes.find(r => r.id === routeId)?.name);
-      });
-      renderSchedule(routeId);
-    }
-
-    function renderSchedule(routeId) {
-      const container = document.getElementById('scheduleContent');
-      const route = routes.find(r => r.id === routeId);
-      const sched = schedules[routeId];
-
-      if (!route || !sched || sched.length === 0) {
-        container.innerHTML = `
-          <div class="flex flex-col items-center justify-center h-64 text-gray-500">
-            <i class="fa-solid fa-clock text-4xl mb-3 text-gray-700"></i>
-            <p>No schedule available for this route.</p>
-          </div>
-        `;
-        return;
-      }
-
-      container.innerHTML = `
-        <div class="flex items-center justify-between mb-6">
-          <h3 class="text-lg font-bold text-white">${route.name}</h3>
-          <span class="text-xs text-gray-500">${sched.length} trips daily</span>
-        </div>
-        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-          ${sched.map((s, i) => `
-            <div class="time-slot glass rounded-xl p-3 text-center cursor-pointer hover:bg-white/5"
-                 onclick="selectSlot('${routeId}', ${i})">
-              <div class="text-sm font-semibold text-white">${s.departure}</div>
-              <div class="text-xs text-gray-500 mt-1">
-                <i class="fa-solid fa-arrow-right text-[10px]"></i> ${s.arrival}
-              </div>
-            </div>
-          `).join('')}
-        </div>
-      `;
-    }
-
-    function scrollToSchedule(routeId) {
-      activeScheduleTab = routeId;
-      renderScheduleTabs();
-      document.getElementById('schedule').scrollIntoView({ behavior: 'smooth' });
-    }
-
-    // ========== Render Fares ==========
-    function renderFares() {
-      const container = document.getElementById('faresContainer');
-      const colors = [
-        { border: 'border-blue-500/20', text: 'text-blue-300', gradient: 'from-blue-500 to-cyan-500', icon: 'fa-road' },
-        { border: 'border-purple-500/20', text: 'text-purple-300', gradient: 'from-purple-500 to-pink-500', icon: 'fa-plane' },
-        { border: 'border-emerald-500/20', text: 'text-emerald-300', gradient: 'from-emerald-500 to-teal-500', icon: 'fa-graduation-cap' }
-      ];
-
-      container.innerHTML = routes.map((r, i) => {
-        const c = colors[i] || colors[0];
-        const f = fares.routes[r.id];
-        return `
-          <div class="glass-strong rounded-3xl p-6 fare-card-anim text-center border ${c.border}">
-            <div class="w-12 h-12 rounded-2xl bg-gradient-to-br ${c.gradient} flex items-center justify-center text-white mx-auto mb-4">
-              <i class="fa-solid ${c.icon}"></i>
-            </div>
-            <h3 class="font-bold text-white mb-2">${r.name}</h3>
-            <div class="text-3xl font-black ${c.text} mb-2">${fares.currency} ${f ? f.flat_fare.toFixed(2) : fares.base_fare.toFixed(2)}</div>
-            <div class="text-sm text-gray-500">Flat fare per ride</div>
-          </div>
-        `;
-      }).join('');
-    }
-
-    // ========== Booking Flow ==========
-    function renderBookingStep1() {
-      const container = document.getElementById('bookingContent');
-      container.innerHTML = `
-        <div class="text-center mb-6">
-          <h3 class="text-xl font-bold text-white">Step 1: Select a Route</h3>
-          <p class="text-sm text-gray-400 mt-1">Choose the route for your trip.</p>
-        </div>
-        <div class="space-y-3">
-          ${routes.map(r => {
-            const f = fares.routes[r.id];
-            return `
-              <button onclick="bookingStep2('${r.id}')"
-                class="w-full glass rounded-2xl p-4 flex items-center justify-between hover:bg-white/5 transition-all duration-300 text-left">
-                <div>
-                  <div class="font-semibold text-white">${r.name}</div>
-                  <div class="text-sm text-gray-400">${r.description}</div>
-                </div>
-                <div class="text-right">
-                  <div class="text-sm font-bold text-blue-400">${fares.currency} ${f ? f.flat_fare.toFixed(2) : '—'}</div>
-                  <div class="text-xs text-gray-500">per ride</div>
-                </div>
-              </button>
-            `;
-          }).join('')}
-        </div>
-      `;
-
-      // Update step indicator
-      updateBookingSteps(1);
-    }
-
-    function bookingStep2(routeId) {
-      bookingState.routeId = routeId;
-      const route = routes.find(r => r.id === routeId);
-      const sched = schedules[routeId];
-      const container = document.getElementById('bookingContent');
-
-      if (!sched || sched.length === 0) {
-        container.innerHTML = `
-          <div class="text-center py-8">
-            <p class="text-gray-400">No schedule available for this route.</p>
-            <button onclick="renderBookingStep1()" class="mt-4 text-blue-400 hover:text-blue-300 transition-colors">← Back</button>
-          </div>
-        `;
-        return;
-      }
-
-      container.innerHTML = `
-        <div class="mb-4">
-          <button onclick="renderBookingStep1()" class="text-sm text-gray-400 hover:text-white transition-colors">
-            <i class="fa-solid fa-arrow-left mr-1"></i> Back
-          </button>
-        </div>
-        <div class="text-center mb-6">
-          <h3 class="text-xl font-bold text-white">Step 2: Select a Time</h3>
-          <p class="text-sm text-gray-400 mt-1">${route.name} — Choose your departure time.</p>
-        </div>
-        <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
-          ${sched.map((s, i) => `
-            <button onclick="bookingStep3(${i})"
-              class="time-slot glass rounded-xl p-4 text-center hover:bg-white/5 transition-all duration-300">
-              <div class="text-base font-bold text-white">${s.departure}</div>
-              <div class="text-xs text-gray-500 mt-1">
-                <i class="fa-solid fa-arrow-right text-[10px]"></i> ${s.arrival}
-              </div>
-            </button>
-          `).join('')}
-        </div>
-      `;
-
-      updateBookingSteps(2);
-    }
-
-    function bookingStep3(slotIdx) {
-      bookingState.slotIdx = slotIdx;
-      const route = routes.find(r => r.id === bookingState.routeId);
-      const sched = schedules[bookingState.routeId];
-      const slot = sched[slotIdx];
-      const f = fares.routes[bookingState.routeId];
-
-      const container = document.getElementById('bookingContent');
-      container.innerHTML = `
-        <div class="mb-4">
-          <button onclick="bookingStep2('${bookingState.routeId}')" class="text-sm text-gray-400 hover:text-white transition-colors">
-            <i class="fa-solid fa-arrow-left mr-1"></i> Back
-          </button>
-        </div>
-        <div class="text-center mb-6">
-          <h3 class="text-xl font-bold text-white">Step 3: Confirm Booking</h3>
-          <p class="text-sm text-gray-400 mt-1">Review and confirm your trip details.</p>
-        </div>
-        <div class="glass rounded-2xl p-6 mb-6">
-          <div class="flex items-center justify-between mb-4 pb-4 border-b border-white/5">
-            <span class="text-gray-400 text-sm">Route</span>
-            <span class="text-white font-semibold">${route.name}</span>
-          </div>
-          <div class="flex items-center justify-between mb-4 pb-4 border-b border-white/5">
-            <span class="text-gray-400 text-sm">Departure</span>
-            <span class="text-white font-semibold">${slot.departure}</span>
-          </div>
-          <div class="flex items-center justify-between mb-4 pb-4 border-b border-white/5">
-            <span class="text-gray-400 text-sm">Arrival</span>
-            <span class="text-white font-semibold">${slot.arrival}</span>
-          </div>
-          <div class="flex items-center justify-between">
-            <span class="text-gray-400 text-sm">Fare</span>
-            <span class="text-blue-400 font-bold text-lg">${fares.currency} ${f ? f.flat_fare.toFixed(2) : fares.base_fare.toFixed(2)}</span>
-          </div>
-        </div>
-        <button onclick="confirmBooking()" class="w-full py-4 rounded-2xl bg-gradient-to-r from-blue-500 to-purple-600 text-white font-semibold glow-blue hover:shadow-xl hover:shadow-blue-500/25 transition-all duration-300 hover:-translate-y-1">
-          <i class="fa-solid fa-check mr-2"></i>Confirm & Book
-        </button>
-      `;
-
-      updateBookingSteps(3);
-    }
-
-    async function confirmBooking() {
-      const route = routes.find(r => r.id === bookingState.routeId);
-      const sched = schedules[bookingState.routeId];
-      const slot = sched[bookingState.slotIdx];
-      const f = fares.routes[bookingState.routeId];
-
-      const booking = {
-        id: Date.now(),
-        route: route.name,
-        departure: slot.departure,
-        arrival: slot.arrival,
-        chatId: 'web-' + Date.now(),
-        status: 'confirmed',
-        createdAt: new Date().toISOString()
-      };
-
-      try {
-        // POST to a new booking endpoint
-        const res = await fetch(API + '/bookings', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(booking)
-        });
-
-        if (!res.ok) throw new Error('Booking failed');
-      } catch(e) {
-        // Store locally as fallback
-        console.warn('Could not save to server, booking stored locally');
-      }
-
-      // Store in localStorage for the user to see
-      const localBookings = JSON.parse(localStorage.getItem('hws_bookings') || '[]');
-      localBookings.push(booking);
-      localStorage.setItem('hws_bookings', JSON.stringify(localBookings));
-
-      const container = document.getElementById('bookingContent');
-      container.innerHTML = `
-        <div class="text-center py-6">
-          <div class="w-20 h-20 rounded-3xl bg-gradient-to-br from-green-400 to-emerald-500 flex items-center justify-center text-white text-3xl mx-auto mb-6 glow-blue">
-            <i class="fa-solid fa-check"></i>
-          </div>
-          <h3 class="text-2xl font-bold text-white mb-2">Booking Confirmed!</h3>
-          <p class="text-gray-400 mb-6">Your shuttle is booked. Here are the details:</p>
-          <div class="glass rounded-2xl p-6 text-left max-w-sm mx-auto mb-6">
-            <div class="flex items-center justify-between mb-3">
-              <span class="text-gray-400 text-sm">Route</span>
-              <span class="text-white font-semibold">${route.name}</span>
-            </div>
-            <div class="flex items-center justify-between mb-3">
-              <span class="text-gray-400 text-sm">Departure</span>
-              <span class="text-white font-semibold">${slot.departure}</span>
-            </div>
-            <div class="flex items-center justify-between mb-3">
-              <span class="text-gray-400 text-sm">Arrival</span>
-              <span class="text-white font-semibold">${slot.arrival}</span>
-            </div>
-            <div class="flex items-center justify-between pt-3 border-t border-white/5">
-              <span class="text-gray-400 text-sm">Booking ID</span>
-              <span class="text-blue-400 font-mono text-sm">#${booking.id}</span>
-            </div>
-          </div>
-          <div class="flex gap-3 justify-center">
-            <button onclick="renderBookingStep1()" class="px-6 py-3 rounded-xl bg-gradient-to-r from-blue-500 to-purple-600 text-white font-semibold text-sm transition-all duration-300 hover:-translate-y-1">
-              Book Another
-            </button>
-            <button onclick="showMyBookings()" class="px-6 py-3 rounded-xl glass text-white font-semibold text-sm transition-all duration-300 hover:bg-white/10">
-              My Bookings
-            </button>
-          </div>
-        </div>
-      `;
-
-      updateBookingSteps(3);
-      showToast('success', 'Booking confirmed!');
-    }
-
-    function updateBookingSteps(step) {
-      const dots = document.querySelectorAll('.step-dot');
-      dots.forEach((d, i) => {
-        const num = i + 1;
-        d.classList.toggle('active', num === step);
-        d.classList.toggle('bg-blue-500', num <= step);
-        d.classList.toggle('bg-gray-800', num > step);
-        d.classList.toggle('text-white', num <= step);
-        d.classList.toggle('text-gray-400', num > step);
-      });
-    }
-
-    // ========== My Bookings ==========
-    function showMyBookings() {
-      const modal = document.getElementById('bookingsModal');
-      const list = document.getElementById('bookingsList');
-      modal.classList.remove('hidden');
-
-      // Show local bookings
-      const localBookings = JSON.parse(localStorage.getItem('hws_bookings') || '[]');
-
-      if (localBookings.length === 0) {
-        list.innerHTML = `
-          <div class="text-center text-gray-500 py-12">
-            <i class="fa-solid fa-ticket text-4xl mb-4 text-gray-700"></i>
-            <p>No bookings yet.</p>
-            <p class="text-sm mt-1">Book a ride to get started!</p>
-          </div>
-        `;
-        return;
-      }
-
-      list.innerHTML = localBookings.slice().reverse().map(b => `
-        <div class="booking-card glass rounded-2xl p-4 mb-3">
-          <div class="flex items-center justify-between mb-2">
-            <span class="font-semibold text-white text-sm">${b.route}</span>
-            <span class="text-xs px-2.5 py-1 rounded-full ${b.status === 'confirmed' ? 'bg-green-900/50 text-green-300 border border-green-500/20' : 'bg-red-900/50 text-red-300 border border-red-500/20'}">
-              ${b.status}
-            </span>
-          </div>
-          <div class="flex items-center gap-4 text-sm text-gray-400">
-            <span><i class="fa-regular fa-clock mr-1"></i>${b.departure}</span>
-            <span><i class="fa-solid fa-arrow-right text-[10px]"></i></span>
-            <span>${b.arrival}</span>
-          </div>
-          <div class="flex items-center justify-between mt-3 pt-3 border-t border-white/5 text-xs text-gray-500">
-            <span>ID: #${b.id}</span>
-            ${b.status === 'confirmed' ? `<button onclick="cancelBookingById(${b.id})" class="text-red-400 hover:text-red-300 transition-colors">Cancel</button>` : ''}
-          </div>
-        </div>
-      `).join('');
-    }
-
-    function closeBookingsModal(e) {
-      if (e && e.target !== e.currentTarget) return;
-      document.getElementById('bookingsModal').classList.add('hidden');
-    }
-
-    function cancelBookingById(id) {
-      const localBookings = JSON.parse(localStorage.getItem('hws_bookings') || '[]');
-      const idx = localBookings.findIndex(b => b.id === id);
-      if (idx === -1) return;
-      localBookings[idx].status = 'canceled';
-      localStorage.setItem('hws_bookings', JSON.stringify(localBookings));
-      showMyBookings();
-      showToast('info', 'Booking #' + id + ' canceled');
-    }
-
-    // ========== Slot selection from schedule ==========
-    function selectSlot(routeId, slotIdx) {
-      bookingState.routeId = routeId;
-      bookingState.slotIdx = slotIdx;
-      document.getElementById('book').scrollIntoView({ behavior: 'smooth' });
-      bookingStep3(slotIdx);
-      updateBookingSteps(3);
-    }
-
-    // ========== Toast ==========
-    function showToast(type, message) {
-      const container = document.getElementById('toastContainer');
-      const colors = {
-        success: 'from-green-500/20 to-emerald-500/10 border-green-500/20',
-        info: 'from-blue-500/20 to-purple-500/10 border-blue-500/20',
-        error: 'from-red-500/20 to-rose-500/10 border-red-500/20'
-      };
-      const icons = {
-        success: 'fa-circle-check text-green-400',
-        info: 'fa-circle-info text-blue-400',
-        error: 'fa-circle-exclamation text-red-400'
-      };
-
-      const toast = document.createElement('div');
-      toast.className = `toast glass rounded-xl px-5 py-3 flex items-center gap-3 border ${colors[type] || colors.info}`;
-      toast.innerHTML = `
-        <i class="fa-solid ${icons[type] || icons.info}"></i>
-        <span class="text-sm text-gray-200">${message}</span>
-      `;
-      container.appendChild(toast);
-      setTimeout(() => {
-        toast.style.opacity = '0';
-        toast.style.transform = 'translateY(10px)';
-        toast.style.transition = 'all 0.3s ease';
-        setTimeout(() => toast.remove(), 300);
-      }, 3000);
-    }
-
-    // ========== Hero Stats ==========
-    function updateHeroStats() {
-      let totalTrips = 0;
-      for (const id in schedules) {
-        if (Array.isArray(schedules[id])) totalTrips += schedules[id].length;
-      }
-      document.getElementById('statRoutes').textContent = routes.length;
-      document.getElementById('statSchedules').textContent = totalTrips;
-      document.getElementById('statFare').textContent = fares.currency + ' ' + fares.base_fare.toFixed(2);
-    }
-
-    // ========== Mobile Menu ==========
-    function toggleMobileMenu() {
-      const menu = document.getElementById('mobileMenu');
+    // Mobile menu
+    document.getElementById('mobile-menu-btn').addEventListener('click', function() {
+      const menu = document.getElementById('mobile-menu');
       menu.classList.toggle('hidden');
-    }
-
-    // ========== Keyboard ==========
-    document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape') closeBookingsModal(e);
     });
 
-    // ========== Start ==========
-    document.addEventListener('DOMContentLoaded', init);
+    const API_BASE = '/api';
+
+    async function loadData() {
+      try {
+        const [routesRes, faresRes] = await Promise.all([
+          fetch(API_BASE + '/routes'),
+          fetch(API_BASE + '/fares'),
+        ]);
+
+        const routes = await routesRes.json();
+        const fares = await faresRes.json();
+
+        // Stats
+        document.getElementById('stat-routes').textContent = routes.length;
+
+        const tripsRes = await fetch(API_BASE + '/trips?date=' + new Date().toISOString().split('T')[0]).catch(() => null);
+        if (tripsRes && tripsRes.ok) {
+          const trips = await tripsRes.json();
+          document.getElementById('stat-trips').textContent = trips.length;
+          document.getElementById('stat-seats').textContent = trips.reduce((s, t) => s + (t.capacity_available || 0), 0);
+        } else {
+          document.getElementById('stat-trips').textContent = '—';
+          document.getElementById('stat-seats').textContent = '—';
+        }
+
+        // Routes
+        const container = document.getElementById('routes-container');
+        container.innerHTML = routes.map(route => {
+          const stops = (route.stops || []).map(s => s.name || s);
+          const schedules = (route.schedules || []).slice(0, 3);
+          const hasMore = (route.schedules || []).length > 3;
+
+          return `
+            <div class="glass-card p-6">
+              <div class="flex items-start justify-between mb-3">
+                <div class="w-10 h-10 rounded-xl flex items-center justify-center" style="background: linear-gradient(135deg, #f0f3f8, #e2e8f0);">
+                  <i class="fas fa-bus" style="color: #1e3a5f;"></i>
+                </div>
+                ${route.fare ? `<span class="text-lg font-bold" style="color: #c9952b;">$${route.fare.flat_fare?.toFixed(2)}<span class="text-xs font-normal" style="color: #94a3b8;">/ride</span></span>` : ''}
+              </div>
+              <h3 class="font-semibold text-lg" style="color: #0a1628;">${route.name}</h3>
+              <p class="text-sm mt-0.5" style="color: #64748b;">${route.description || ''}</p>
+              ${stops.length > 0 ? `
+                <div class="mt-4 flex flex-wrap gap-1.5">
+                  ${stops.map((stop, i) => `
+                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs" style="background: ${i === 0 ? '#ecfdf5' : i === stops.length - 1 ? '#fef2f2' : '#f1f5f9'}; color: ${i === 0 ? '#047857' : i === stops.length - 1 ? '#b91c1c' : '#475569'};">
+                      ${stop}
+                      ${i < stops.length - 1 ? '<i class="fas fa-chevron-right text-[8px] ml-0.5" style="opacity: 0.3;"></i>' : ''}
+                    </span>
+                  `).join('')}
+                </div>
+              ` : ''}
+              ${schedules.length > 0 ? `
+                <div class="mt-4 pt-3" style="border-top: 1px solid #e2e8f0;">
+                  <div class="flex items-center gap-1.5 text-xs mb-2" style="color: #94a3b8;">
+                    <i class="fas fa-clock"></i> Schedule
+                  </div>
+                  <div class="flex flex-wrap gap-1.5">
+                    ${schedules.map(s => `
+                      <span class="text-xs px-2 py-1 rounded-lg font-medium" style="background: #f1f5f9; color: #475569;">
+                        ${s.departure}${s.arrival ? ` <span style="color: #94a3b8;">→</span> ${s.arrival}` : ''}
+                      </span>
+                    `).join('')}
+                    ${hasMore ? `<span class="text-xs" style="color: #94a3b8;">+${route.schedules.length - 3}</span>` : ''}
+                  </div>
+                </div>
+              ` : ''}
+            </div>
+          `;
+        }).join('');
+
+        // Fares
+        const faresContainer = document.getElementById('fares-container');
+        const baseFare = fares.base_fare || 3.5;
+        const perStop = fares.per_stop || 1.5;
+        faresContainer.innerHTML = `
+          <div class="glass-card p-8 text-center">
+            <div class="text-5xl font-black" style="color: #0a1628;">$${baseFare.toFixed(2)}</div>
+            <div class="text-sm mt-1" style="color: #64748b;">Base fare per ride</div>
+            <div class="mt-4 text-sm" style="color: #64748b;">
+              + $${perStop.toFixed(2)} per additional stop beyond the first
+            </div>
+            <div class="mt-6 pt-6" style="border-top: 1px solid #e2e8f0;">
+              <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-left">
+                ${Object.entries(fares.routes || {}).map(([id, f]) => `
+                  <div class="p-3 rounded-xl" style="background: #f8f9fc; border: 1px solid #e2e8f0;">
+                    <div class="text-xs" style="color: #64748b;">${id}</div>
+                    <div class="text-lg font-bold mt-0.5" style="color: #0a1628;">$${f.flat_fare?.toFixed(2)}</div>
+                    <div class="text-xs" style="color: #94a3b8;">Flat fare</div>
+                  </div>
+                `).join('')}
+              </div>
+            </div>
+          </div>
+        `;
+      } catch (err) {
+        console.error('Failed to load data:', err);
+      }
+    }
+
+    loadData();
+
+    // GSAP animations
+    document.addEventListener('DOMContentLoaded', () => {
+      if (typeof gsap !== 'undefined') {
+        gsap.from('.glass-card', {
+          scrollTrigger: {
+            trigger: '#routes',
+            start: 'top 80%',
+          },
+          y: 30,
+          opacity: 0,
+          duration: 0.6,
+          stagger: 0.1,
+          ease: 'power2.out',
+        });
+      }
+    });
   </script>
 </body>
 </html>

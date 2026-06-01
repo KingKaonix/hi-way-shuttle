@@ -7,11 +7,13 @@ async function startPolling(botToken, handleUpdate) {
   while (true) {
     try {
       const res = await axios.get(`https://api.telegram.org/bot${botToken}/getUpdates`, {
-        params: { offset, timeout: 30, allowed_updates: ['message', 'callback_query'] }
+        params: { offset, timeout: 30, allowed_updates: ['message', 'callback_query'] },
+        timeout: 60000  // axios timeout (ms) — must be > Telegram's long-poll timeout
       });
 
       const updates = res.data.result;
       if (updates && updates.length > 0) {
+        console.log(`Got ${updates.length} update(s), processing...`);
         for (const update of updates) {
           offset = update.update_id + 1;
           try {
@@ -22,11 +24,11 @@ async function startPolling(botToken, handleUpdate) {
         }
       }
     } catch (err) {
-      if (err.code === 'ECONNRESET' || err.code === 'ETIMEDOUT') {
-        // Timeout is expected with long polling — just retry
+      if (err.code === 'ECONNRESET' || err.code === 'ETIMEDOUT' || err.code === 'ECONNABORTED') {
+        // Timeout/connection reset is expected with long polling — just retry
         continue;
       }
-      console.error('Polling error:', err.message);
+      console.error('Polling error:', err.code, err.message);
       await new Promise(r => setTimeout(r, 5000));
     }
   }
