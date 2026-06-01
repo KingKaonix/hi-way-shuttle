@@ -1,0 +1,50 @@
+{
+  "expo": {
+    "name": "HiWay Rider",
+    "slug": "hiway-rider",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "scheme": "hiway",
+    "userInterfaceStyle": "automatic",
+    "splash": {
+      "backgroundColor": "#0a1628",
+      "resizeMode": "contain"
+    },
+    "assetBundlePatterns": ["**/*"],
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.hiway.rider",
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "Your location is used to find nearby drivers and track your ride."
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#0a1628"
+      },
+      "package": "com.hiway.rider",
+      "config": {
+        "googleMaps": { "apiKey": "YOUR_GOOGLE_MAPS_API_KEY" }
+      },
+      "permissions": [
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION",
+        "FOREGROUND_SERVICE_LOCATION"
+      ]
+    },
+    "plugins": [
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "Your location is used to find nearby drivers and track your ride.",
+          "locationWhenInUsePermission": "Your location is used to find nearby drivers and track your ride."
+        }
+      ],
+      "expo-notifications"
+    ],
+    "extra": {
+      "apiUrl": "https://hi-way-shuttle.fly.dev"
+    }
+  }
+}
