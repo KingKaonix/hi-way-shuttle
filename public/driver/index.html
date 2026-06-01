@@ -1,0 +1,757 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>HiWay Driver — 100% Earnings</title>
+  <meta name="description" content="Drive with HiWay. Keep 100% of your earnings. Zero commission.">
+  <meta name="theme-color" content="#0a1628">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <style>
+    :root {
+      --navy-900: #0a1628;
+      --gold-400: #e7b433;
+      --gold-500: #c9952b;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Inter', system-ui, sans-serif;
+      background: #0a1628;
+      color: #e2e8f0;
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    #map { position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 0; }
+
+    /* Driver mode indicator */
+    .mode-bar {
+      position: fixed; top: 16px; left: 16px; right: 16px;
+      z-index: 10;
+      display: flex; align-items: center; justify-content: space-between;
+      max-width: 480px; margin: 0 auto;
+      padding: 12px 16px;
+      background: rgba(10, 22, 40, 0.92);
+      backdrop-filter: blur(12px);
+      border-radius: 16px;
+      border: 1px solid rgba(30, 58, 95, 0.5);
+      box-shadow: 0 4px 24px rgba(0,0,0,0.2);
+    }
+
+    .online-toggle {
+      width: 52px; height: 28px;
+      border-radius: 14px;
+      border: none;
+      cursor: pointer;
+      position: relative;
+      transition: all 0.3s;
+    }
+    .online-toggle.off { background: #475569; }
+    .online-toggle.on { background: #10b981; box-shadow: 0 0 12px rgba(16, 185, 129, 0.3); }
+    .online-toggle::after {
+      content: '';
+      position: absolute; top: 3px; left: 3px;
+      width: 22px; height: 22px;
+      border-radius: 50%;
+      background: white;
+      transition: transform 0.3s;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+    }
+    .online-toggle.on::after { transform: translateX(24px); }
+
+    /* Bottom sheet */
+    .bottom-sheet {
+      position: fixed; bottom: 0; left: 0; right: 0;
+      z-index: 10;
+      background: rgba(10, 22, 40, 0.95);
+      backdrop-filter: blur(16px);
+      border-top: 1px solid rgba(30, 58, 95, 0.5);
+      border-radius: 20px 20px 0 0;
+      max-height: 60vh;
+      overflow-y: auto;
+      transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+    .bottom-sheet-content { padding: 16px 20px 20px; }
+    .handle { width: 36px; height: 4px; background: #475569; border-radius: 2px; margin: 8px auto; }
+
+    /* Ride request card */
+    .ride-request {
+      background: linear-gradient(135deg, rgba(30, 58, 95, 0.5), rgba(10, 22, 40, 0.8));
+      border-radius: 16px;
+      padding: 20px;
+      border: 1px solid rgba(201, 149, 43, 0.2);
+      animation: fadeIn 0.3s ease;
+    }
+
+    .btn-accept {
+      width: 100%; padding: 16px;
+      border-radius: 14px;
+      border: none;
+      font-family: inherit;
+      font-size: 16px; font-weight: 700;
+      cursor: pointer;
+      background: linear-gradient(135deg, #10b981, #059669);
+      color: white;
+      box-shadow: 0 4px 16px rgba(16, 185, 129, 0.3);
+      transition: all 0.3s;
+    }
+    .btn-accept:hover { transform: translateY(-1px); box-shadow: 0 8px 24px rgba(16, 185, 129, 0.4); }
+
+    .btn-decline {
+      padding: 12px 24px;
+      border-radius: 12px;
+      border: 1px solid rgba(239, 68, 68, 0.3);
+      background: rgba(239, 68, 68, 0.1);
+      color: #ef4444;
+      font-family: inherit;
+      font-size: 14px; font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-decline:hover { background: rgba(239, 68, 68, 0.2); }
+
+    /* Stats cards */
+    .stat-card {
+      background: rgba(30, 58, 95, 0.3);
+      border-radius: 14px;
+      padding: 14px;
+      border: 1px solid rgba(30, 58, 95, 0.4);
+    }
+
+    /* Ride status */
+    .status-active {
+      background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(16, 185, 129, 0.05));
+      border: 1px solid rgba(16, 185, 129, 0.2);
+      border-radius: 16px;
+      padding: 20px;
+    }
+
+    /* Earnings */
+    .earnings-amount {
+      font-size: 36px; font-weight: 800;
+      background: linear-gradient(135deg, #e7b433, #c9952b);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .driver-marker {
+      width: 36px; height: 36px;
+      background: linear-gradient(135deg, var(--gold-400), var(--gold-500));
+      border: 3px solid white;
+      border-radius: 50%;
+      box-shadow: 0 0 0 4px rgba(201, 149, 43, 0.3), 0 4px 12px rgba(0,0,0,0.2);
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 800; font-size: 14px; color: white;
+    }
+
+    .pulse-ring {
+      width: 48px; height: 48px;
+      border-radius: 50%;
+      background: rgba(201, 149, 43, 0.2);
+      position: absolute;
+      animation: pulseRing 2s infinite;
+    }
+
+    @keyframes pulseRing {
+      0% { transform: scale(0.8); opacity: 1; }
+      100% { transform: scale(1.5); opacity: 0; }
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .toast {
+      position: fixed; top: 80px; left: 16px; right: 16px;
+      z-index: 100;
+      padding: 14px 16px;
+      border-radius: 14px;
+      font-size: 14px; font-weight: 500;
+      max-width: 480px; margin: 0 auto;
+      transform: translateY(-20px);
+      opacity: 0;
+      transition: all 0.3s ease;
+    }
+    .toast.show { transform: translateY(0); opacity: 1; }
+    .toast.success { background: #064e3b; color: #6ee7b7; border: 1px solid rgba(16, 185, 129, 0.3); }
+    .toast.error { background: #450a0a; color: #fca5a5; border: 1px solid rgba(239, 68, 68, 0.3); }
+    .toast.info { background: #1e3a5f; color: #93c5fd; border: 1px solid rgba(59, 130, 246, 0.3); }
+
+    .hidden { display: none !important; }
+
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #475569; border-radius: 2px; }
+
+    .route-info {
+      display: flex; align-items: center; gap: 12px;
+      padding: 12px 16px;
+      background: rgba(15, 23, 42, 0.5);
+      border-radius: 12px;
+    }
+
+    button { font-family: inherit; }
+  </style>
+</head>
+<body>
+  <div id="toast" class="toast"></div>
+  <div id="map"></div>
+
+  <!-- Mode Bar -->
+  <div class="mode-bar">
+    <div style="display:flex;align-items:center;gap:10px;">
+      <div style="position:relative;">
+        <div class="driver-marker" id="driver-avatar">D</div>
+      </div>
+      <div>
+        <div style="font-weight:700;font-size:15px;color:white;" id="driver-name">Driver</div>
+        <div style="font-size:12px;color:#64748b;" id="driver-status">Offline</div>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px;">
+      <span style="font-size:13px;color:#94a3b8;font-weight:500;" id="mode-label">Offline</span>
+      <button id="online-toggle" class="online-toggle off" onclick="toggleOnline()"></button>
+    </div>
+  </div>
+
+  <!-- Bottom Sheet -->
+  <div id="bottom-sheet" class="bottom-sheet">
+    <div class="handle"></div>
+    <div class="bottom-sheet-content">
+
+      <!-- Idle state -->
+      <div id="state-idle">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;">
+          <div class="stat-card" style="text-align:center;">
+            <div style="font-size:11px;color:#64748b;margin-bottom:4px;">Earnings</div>
+            <div style="font-size:24px;font-weight:800;color:var(--gold-500);" id="total-earnings">$0</div>
+          </div>
+          <div class="stat-card" style="text-align:center;">
+            <div style="font-size:11px;color:#64748b;margin-bottom:4px;">Trips</div>
+            <div style="font-size:24px;font-weight:800;color:white;" id="total-trips">0</div>
+          </div>
+          <div class="stat-card" style="text-align:center;">
+            <div style="font-size:11px;color:#64748b;margin-bottom:4px;">Rating</div>
+            <div style="font-size:24px;font-weight:800;color:white;" id="driver-rating">5.0</div>
+          </div>
+          <div class="stat-card" style="text-align:center;">
+            <div style="font-size:11px;color:#64748b;margin-bottom:4px;">Online</div>
+            <div style="font-size:24px;font-weight:800;color:#10b981;" id="online-hours">0h</div>
+          </div>
+        </div>
+
+        <div style="text-align:center;padding:12px 0;">
+          <div style="font-size:32px;margin-bottom:4px;" id="go-icon">⬆</div>
+          <div style="font-weight:600;color:#94a3b8;font-size:15px;" id="go-text">Go online to receive ride requests</div>
+          <div style="font-size:13px;color:#64748b;margin-top:4px;">You keep 100% of every fare. No commission. Ever.</div>
+        </div>
+
+        <div style="margin-top:16px;padding-top:12px;border-top:1px solid rgba(30,58,95,0.5);">
+          <div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:center;">
+            <span style="font-size:11px;padding:5px 12px;background:rgba(30,58,95,0.4);border-radius:20px;color:#94a3b8;border:1px solid rgba(30,58,95,0.3);">100% of fares</span>
+            <span style="font-size:11px;padding:5px 12px;background:rgba(30,58,95,0.4);border-radius:20px;color:#94a3b8;border:1px solid rgba(30,58,95,0.3);">Weekly payouts</span>
+            <span style="font-size:11px;padding:5px 12px;background:rgba(30,58,95,0.4);border-radius:20px;color:#94a3b8;border:1px solid rgba(30,58,95,0.3);">24/7 support</span>
+            <span style="font-size:11px;padding:5px 12px;background:rgba(30,58,95,0.4);border-radius:20px;color:#94a3b8;border:1px solid rgba(30,58,95,0.3);">Flexible hours</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Ride request -->
+      <div id="state-request" class="hidden">
+        <div class="ride-request">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+            <span style="font-size:12px;color:#64748b;font-weight:500;">NEW RIDE REQUEST</span>
+            <span id="request-timer" style="font-size:14px;font-weight:700;color:var(--gold-500);">15s</span>
+          </div>
+
+          <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
+            <div style="width:44px;height:44px;border-radius:12px;background:rgba(16,185,129,0.2);display:flex;align-items:center;justify-content:center;font-size:18px;">📍</div>
+            <div style="flex:1;">
+              <div style="font-weight:700;font-size:16px;color:white;" id="request-pickup-name">—</div>
+              <div style="font-size:12px;color:#64748b;" id="request-pickup-addr">—</div>
+            </div>
+          </div>
+
+          <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
+            <div style="width:44px;height:44px;border-radius:12px;background:rgba(239,68,68,0.2);display:flex;align-items:center;justify-content:center;font-size:18px;">🏁</div>
+            <div style="flex:1;">
+              <div style="font-weight:700;font-size:16px;color:white;" id="request-dropoff-name">—</div>
+              <div style="font-size:12px;color:#64748b;" id="request-dropoff-addr">—</div>
+            </div>
+          </div>
+
+          <div style="display:flex;gap:12px;padding:12px 0;border-top:1px solid rgba(30,58,95,0.5);margin-bottom:16px;">
+            <div style="flex:1;text-align:center;">
+              <div style="font-size:11px;color:#64748b;">Distance</div>
+              <div style="font-size:15px;font-weight:700;color:white;"><span id="request-distance">—</span> km</div>
+            </div>
+            <div style="flex:1;text-align:center;">
+              <div style="font-size:11px;color:#64748b;">Duration</div>
+              <div style="font-size:15px;font-weight:700;color:white;"><span id="request-duration">—</span> min</div>
+            </div>
+            <div style="flex:1;text-align:center;">
+              <div style="font-size:11px;color:#64748b;">You earn</div>
+              <div style="font-size:17px;font-weight:800;color:#10b981;">$<span id="request-fare">—</span></div>
+            </div>
+          </div>
+
+          <div style="display:flex;gap:10px;">
+            <button class="btn-decline" style="flex:1;" onclick="declineRide()">Decline</button>
+            <button class="btn-accept" style="flex:3;" onclick="acceptRide()">✓ Accept — $<span id="accept-fare">—</span></button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Active ride -->
+      <div id="state-active" class="hidden">
+        <div class="status-active">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+            <span style="font-size:12px;color:#10b981;font-weight:600;display:flex;align-items:center;gap:6px;">
+              <span style="width:8px;height:8px;border-radius:50%;background:#10b981;display:inline-block;animation:pulseRing 2s infinite;"></span>
+              <span id="active-status-label">En route to pickup</span>
+            </span>
+            <span style="font-size:13px;color:#64748b;$<span id="active-earnings">0</span></span>
+          </div>
+
+          <div class="route-info" style="margin-bottom:10px;">
+            <div style="width:2px;height:32px;background:linear-gradient(to bottom,#10b981,#ef4444);border-radius:1px;"></div>
+            <div style="flex:1;">
+              <div style="font-size:14px;font-weight:600;color:white;" id="active-pickup">—</div>
+              <div style="font-size:12px;color:#64748b;margin-top:2px;" id="active-dropoff">→ —</div>
+            </div>
+          </div>
+
+          <div style="display:flex;gap:10px;margin-top:16px;padding-top:16px;border-top:1px solid rgba(16,185,129,0.1);">
+            <button onclick="completeRide()" id="complete-btn" class="btn-accept" style="flex:1;display:none;">
+              ✓ Complete Ride
+            </button>
+            <button onclick="cancelActiveRide()" class="btn-decline" style="flex:0;padding:12px 16px;">Cancel</button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <style>
+    @keyframes pulseRing {
+      0% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.5); opacity: 0.5; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+  </style>
+
+  <script>
+    // --- State ---
+    const STATE = {
+      driverId: null,
+      driverName: null,
+      online: false,
+      currentRide: null,
+      map: null,
+      driverMarker: null,
+      pickupMarker: null,
+      dropoffMarker: null,
+      locationWatchId: null,
+      lat: 40.7128,
+      lng: -74.0060,
+      ws: null,
+      requestTimer: null,
+      requestTimeLeft: 15,
+      watchPositionId: null,
+    };
+
+    // --- Init ---
+    document.addEventListener('DOMContentLoaded', async () => {
+      await identifyDriver();
+      initMap();
+      connectWebSocket();
+      startLocationTracking();
+      loadEarnings();
+    });
+
+    async function identifyDriver() {
+      let driverId = localStorage.getItem('hiway_driver_id');
+      let driverName = localStorage.getItem('hiway_driver_name');
+
+      if (!driverId) {
+        const name = prompt('Welcome to HiWay Driver! What\'s your name?') || 'Driver';
+        const vehicle = prompt('Your vehicle (e.g., Tesla Model 3)') || 'Sedan';
+        const plate = prompt('License plate') || 'HIWAY';
+
+        try {
+          const res = await fetch('/api/hiway/driver/register', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              name, phone: '', email: name.toLowerCase().replace(/\s/g,'') + '@hiway.driver',
+              vehicle, licensePlate: plate,
+              lat: STATE.lat, lng: STATE.lng,
+            }),
+          });
+          const data = await res.json();
+          driverId = data.driver.id;
+          driverName = data.driver.name;
+          localStorage.setItem('hiway_driver_id', driverId);
+          localStorage.setItem('hiway_driver_name', driverName);
+          localStorage.setItem('hiway_driver_vehicle', data.driver.vehicle);
+        } catch(e) {
+          driverId = 'drv_' + Date.now();
+          driverName = name;
+        }
+      }
+
+      STATE.driverId = driverId;
+      STATE.driverName = driverName;
+      document.getElementById('driver-name').textContent = driverName;
+      document.getElementById('driver-avatar').textContent = driverName.charAt(0).toUpperCase();
+    }
+
+    function initMap() {
+      STATE.map = L.map('map', {
+        zoomControl: false,
+        attributionControl: false,
+      }).setView([40.7128, -74.006], 13);
+
+      L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+        maxZoom: 19,
+      }).addTo(STATE.map);
+
+      STATE.driverMarker = L.marker([STATE.lat, STATE.lng], {
+        icon: L.divIcon({
+          className: '',
+          html: '<div style="position:relative;"><div class="pulse-ring"></div><div class="driver-marker">' + STATE.driverName.charAt(0).toUpperCase() + '</div></div>',
+          iconSize: [48, 48],
+          iconAnchor: [24, 24],
+        }),
+        zIndexOffset: 1000,
+      }).addTo(STATE.map);
+    }
+
+    function startLocationTracking() {
+      if ('geolocation' in navigator) {
+        STATE.watchPositionId = navigator.geolocation.watchPosition(
+          (pos) => {
+            STATE.lat = pos.coords.latitude;
+            STATE.lng = pos.coords.longitude;
+            if (STATE.driverMarker) {
+              STATE.driverMarker.setLatLng([STATE.lat, STATE.lng]);
+            }
+            STATE.map.setView([STATE.lat, STATE.lng], 14);
+
+            // Send location via WebSocket
+            if (STATE.ws && STATE.ws.readyState === 1 && STATE.online) {
+              STATE.ws.send(JSON.stringify({
+                type: 'driver:location',
+                driverId: STATE.driverId,
+                lat: STATE.lat,
+                lng: STATE.lng,
+              }));
+            }
+
+            // Also send via REST
+            if (STATE.online) {
+              fetch(`/api/hiway/driver/${STATE.driverId}/status`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ online: true, lat: STATE.lat, lng: STATE.lng }),
+              }).catch(() => {});
+            }
+          },
+          (err) => console.log('Location error:', err.message),
+          { enableHighAccuracy: true, timeout: 5000, maximumAge: 10000 }
+        );
+      }
+    }
+
+    function connectWebSocket() {
+      const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+      const wsUrl = `${protocol}//${window.location.host}/ws/rideshare`;
+
+      try {
+        STATE.ws = new WebSocket(wsUrl);
+        STATE.ws.onopen = () => {
+          STATE.ws.send(JSON.stringify({
+            type: 'auth:driver',
+            driverId: STATE.driverId,
+            lat: STATE.lat,
+            lng: STATE.lng,
+          }));
+        };
+        STATE.ws.onmessage = (event) => {
+          const msg = JSON.parse(event.data);
+          handleWsMessage(msg);
+        };
+        STATE.ws.onclose = () => setTimeout(connectWebSocket, 3000);
+        STATE.ws.onerror = () => {};
+      } catch(e) {}
+    }
+
+    function handleWsMessage(msg) {
+      switch (msg.type) {
+        case 'ride:assigned':
+          showRideRequest(msg.ride);
+          break;
+        case 'ride:request':
+          showRideRequest(msg);
+          break;
+        case 'ride:cancelled':
+          if (STATE.currentRide && msg.rideId === STATE.currentRide.id) {
+            showToast('Ride was cancelled', 'error');
+            STATE.currentRide = null;
+            clearRideMarkers();
+            showState('idle');
+          }
+          break;
+        case 'ride:status':
+          if (msg.ride && STATE.currentRide && msg.ride.id === STATE.currentRide.id) {
+            STATE.currentRide = msg.ride;
+            updateActiveRideUI();
+          }
+          break;
+      }
+    }
+
+    // --- Online Toggle ---
+    async function toggleOnline() {
+      STATE.online = !STATE.online;
+      const toggle = document.getElementById('online-toggle');
+      const label = document.getElementById('mode-label');
+      const goText = document.getElementById('go-text');
+      const goIcon = document.getElementById('go-icon');
+
+      toggle.className = `online-toggle ${STATE.online ? 'on' : 'off'}`;
+      label.textContent = STATE.online ? 'Online' : 'Offline';
+      document.getElementById('driver-status').textContent = STATE.online ? 'Online · Accepting rides' : 'Offline';
+
+      if (STATE.online) {
+        goText.textContent = 'Waiting for ride requests...';
+        goIcon.textContent = '🔊';
+        showToast('You\'re online! Riders can now find you.', 'success');
+      } else {
+        goText.textContent = 'Go online to receive ride requests';
+        goIcon.textContent = '⬆';
+        showToast('You\'re offline', 'info');
+      }
+
+      try {
+        await fetch(`/api/hiway/driver/${STATE.driverId}/status`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ online: STATE.online, lat: STATE.lat, lng: STATE.lng }),
+        });
+      } catch(e) {}
+    }
+
+    // --- Ride Request ---
+    let requestTimeout = null;
+
+    function showRideRequest(data) {
+      if (STATE.currentRide) return; // Already on a ride
+
+      showState('request');
+
+      document.getElementById('request-pickup-name').textContent = data.pickup?.name || 'Pickup location';
+      document.getElementById('request-dropoff-name').textContent = data.dropoff?.name || 'Dropoff location';
+      document.getElementById('request-fare').textContent = (data.fare || 12.50).toFixed(2);
+      document.getElementById('accept-fare').textContent = (data.fare || 12.50).toFixed(2);
+
+      if (data.fareBreakdown) {
+        document.getElementById('request-distance').textContent = data.fareBreakdown.distance || '—';
+        document.getElementById('request-duration').textContent = data.fareBreakdown.duration || '—';
+      } else {
+        document.getElementById('request-distance').textContent = '3.2';
+        document.getElementById('request-duration').textContent = '12';
+      }
+
+      // Show pickup/dropoff on map
+      if (data.pickup) {
+        clearRideMarkers();
+        const pickupIcon = L.divIcon({
+          className: '',
+          html: '<div style="width:16px;height:16px;background:#10b981;border:3px solid white;border-radius:50%;box-shadow:0 2px 8px rgba(0,0,0,0.3);"></div>',
+          iconSize: [16, 16],
+          iconAnchor: [8, 8],
+        });
+        STATE.pickupMarker = L.marker([data.pickup.lat, data.pickup.lng], { icon: pickupIcon }).addTo(STATE.map);
+        STATE.map.setView([data.pickup.lat, data.pickup.lng], 13);
+
+        if (data.dropoff) {
+          const dropoffIcon = L.divIcon({
+            className: '',
+            html: '<div style="width:16px;height:16px;background:#ef4444;border:3px solid white;border-radius:50%;box-shadow:0 2px 8px rgba(0,0,0,0.3);"></div>',
+            iconSize: [16, 16],
+            iconAnchor: [8, 8],
+          });
+          STATE.dropoffMarker = L.marker([data.dropoff.lat, data.dropoff.lng], { icon: dropoffIcon }).addTo(STATE.map);
+        }
+      }
+
+      // Timer
+      STATE.requestTimeLeft = 15;
+      document.getElementById('request-timer').textContent = '15s';
+      clearInterval(requestTimeout);
+      requestTimeout = setInterval(() => {
+        STATE.requestTimeLeft--;
+        document.getElementById('request-timer').textContent = STATE.requestTimeLeft + 's';
+        if (STATE.requestTimeLeft <= 0) {
+          clearInterval(requestTimeout);
+          declineRide();
+        }
+      }, 1000);
+
+      // Vibrate
+      if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
+    }
+
+    async function acceptRide() {
+      clearInterval(requestTimeout);
+
+      showToast('Ride accepted! Navigate to pickup.', 'success');
+
+      // Send accept via WebSocket
+      if (STATE.ws && STATE.ws.readyState === 1) {
+        STATE.ws.send(JSON.stringify({
+          type: 'driver:accept',
+          driverId: STATE.driverId,
+          rideId: STATE.currentRide?.id || ('ride_' + Date.now()),
+        }));
+      }
+
+      // Demo: simulate ride
+      simulateRideActive();
+    }
+
+    function declineRide() {
+      clearInterval(requestTimeout);
+      clearRideMarkers();
+      showState('idle');
+      showToast('Ride declined', 'info');
+    }
+
+    // --- Active Ride ---
+    function simulateRideActive() {
+      STATE.currentRide = {
+        id: 'ride_' + Date.now(),
+        status: 'accepted',
+        pickup: { name: document.getElementById('request-pickup-name').textContent, lat: 40.7128, lng: -74.0060 },
+        dropoff: { name: document.getElementById('request-dropoff-name').textContent, lat: 40.7580, lng: -73.9855 },
+        fare: parseFloat(document.getElementById('request-fare').textContent),
+      };
+
+      showState('active');
+      updateActiveRideUI();
+    }
+
+    function updateActiveRideUI() {
+      if (!STATE.currentRide) return;
+      document.getElementById('active-pickup').textContent = STATE.currentRide.pickup?.name || 'Pickup';
+      document.getElementById('active-dropoff').textContent = '→ ' + (STATE.currentRide.dropoff?.name || 'Dropoff');
+      document.getElementById('active-earnings').textContent = '$' + (STATE.currentRide.fare || 0).toFixed(2);
+
+      const statusLabel = document.getElementById('active-status-label');
+      const completeBtn = document.getElementById('complete-btn');
+      const status = STATE.currentRide.status;
+
+      switch (status) {
+        case 'accepted':
+          statusLabel.textContent = '🚗 Heading to pickup';
+          statusLabel.style.color = '#e7b433';
+          completeBtn.style.display = 'none';
+          break;
+        case 'enroute':
+          statusLabel.textContent = '🚗 En route to pickup';
+          statusLabel.style.color = '#e7b433';
+          completeBtn.style.display = 'none';
+          break;
+        case 'picked_up':
+          statusLabel.textContent = '✅ Rider picked up';
+          statusLabel.style.color = '#10b981';
+          completeBtn.style.display = 'none';
+          break;
+        case 'in_progress':
+          statusLabel.textContent = '🛣️ On the way';
+          statusLabel.style.color = '#10b981';
+          completeBtn.style.display = 'block';
+          break;
+        case 'completed':
+          statusLabel.textContent = '✅ Completed';
+          statusLabel.style.color = '#10b981';
+          completeBtn.style.display = 'none';
+          break;
+      }
+    }
+
+    async function completeRide() {
+      if (!STATE.currentRide) return;
+
+      showToast(`Trip completed! You earned $${STATE.currentRide.fare.toFixed(2)}`, 'success');
+
+      if (STATE.ws && STATE.ws.readyState === 1) {
+        STATE.ws.send(JSON.stringify({
+          type: 'ride:status',
+          rideId: STATE.currentRide.id,
+          status: 'completed',
+        }));
+      }
+
+      // Update local earnings
+      const currentEarnings = parseInt(localStorage.getItem('hiway_earnings') || '0');
+      localStorage.setItem('hiway_earnings', currentEarnings + Math.round(STATE.currentRide.fare * 100));
+      const currentTrips = parseInt(localStorage.getItem('hiway_trips') || '0');
+      localStorage.setItem('hiway_trips', currentTrips + 1);
+
+      STATE.currentRide = null;
+      clearRideMarkers();
+      loadEarnings();
+      setTimeout(() => showState('idle'), 2000);
+    }
+
+    function cancelActiveRide() {
+      if (!confirm('Cancel this ride?')) return;
+      if (STATE.ws && STATE.ws.readyState === 1 && STATE.currentRide) {
+        STATE.ws.send(JSON.stringify({
+          type: 'ride:status',
+          rideId: STATE.currentRide.id,
+          status: 'cancelled',
+        }));
+      }
+      STATE.currentRide = null;
+      clearRideMarkers();
+      showState('idle');
+      showToast('Ride cancelled', 'info');
+    }
+
+    // --- UI Helpers ---
+    function showState(stateId) {
+      document.querySelectorAll('[id^="state-"]').forEach(el => el.classList.add('hidden'));
+      document.getElementById('state-' + stateId).classList.remove('hidden');
+    }
+
+    function clearRideMarkers() {
+      if (STATE.pickupMarker) { STATE.map.removeLayer(STATE.pickupMarker); STATE.pickupMarker = null; }
+      if (STATE.dropoffMarker) { STATE.map.removeLayer(STATE.dropoffMarker); STATE.dropoffMarker = null; }
+    }
+
+    function loadEarnings() {
+      const earnings = localStorage.getItem('hiway_earnings') || '0';
+      const trips = localStorage.getItem('hiway_trips') || '0';
+      document.getElementById('total-earnings').textContent = '$' + (parseInt(earnings) / 100).toFixed(0);
+      document.getElementById('total-trips').textContent = trips;
+    }
+
+    function showToast(message, type = 'info') {
+      const toast = document.getElementById('toast');
+      toast.textContent = message;
+      toast.className = `toast ${type} show`;
+      setTimeout(() => toast.classList.remove('show'), 4000);
+    }
+  </script>
+</body>
+</html>

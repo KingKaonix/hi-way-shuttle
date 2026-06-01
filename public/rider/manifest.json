@@ -1,0 +1,15 @@
+{
+  "name": "HiWay Rider",
+  "short_name": "HiWay",
+  "description": "Revolutionary rideshare. Zero surge. Drivers keep 100%.",
+  "start_url": "/rider/",
+  "display": "standalone",
+  "background_color": "#0a1628",
+  "theme_color": "#0a1628",
+  "orientation": "portrait",
+  "icons": [{
+    "src": "/logo.svg",
+    "sizes": "220x60",
+    "type": "image/svg+xml"
+  }]
+}

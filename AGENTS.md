@@ -1,74 +1,78 @@
-# Hi-Way-Shuttle — Agent Instructions
+# Hi-Way-Shuttle / HiWay Rideshare — Agent Instructions
 
 ## Project Overview
 
-Node.js/Express shuttle service with Telegram bot, Messenger bot, and a Telegram Mini App. Bookings are persisted to a JSON file. Config is driven by JSON files under `config/`.
+Two platforms in one repo:
+1. **Hi-Way-Shuttle** — Scheduled shuttle service (Express + React + Telegram bot)
+2. **HiWay Rideshare** — Revolutionary on-demand rideshare (Rider + Driver apps)
 
 ## Structure
 
 ```
-├── bots/
-│   ├── telegram.js      # Telegram bot — inline keyboards, callback queries
-│   └── messenger.js     # Messenger bot — quick replies, postbacks
-├── config/
-│   ├── fares.json       # Base fare + per-route flat fares + currency
-│   ├── routes.json      # Route definitions with stops
-│   └── schedules.json   # Departure/arrival times per route
+├── server.js                 # Express entry — shuttle API + rideshare API + WebSocket
+├── rideshare-engine.js       # Nobel-worthy rideshare core (matching, pricing, subs)
+├── store.js                  # Booking persistence (JSON file)
+├── poller.js                 # Telegram long-polling
+├── bots/                     # Telegram + Messenger bots
+├── config/                   # Routes, fares, schedules
 ├── public/
-│   ├── index.html       # Landing page (fetches API data)
-│   └── mini-app/
-│       └── index.html   # Telegram Mini App (standalone booking UI)
-├── data/
-│   └── bookings.json    # Persisted bookings (gitignored)
-├── server.js            # Express entry point, API routes, webhooks
-├── store.js             # Booking CRUD (JSON file persistence)
-├── poller.js            # Telegram long-polling loop
-├── test/
-│   └── smoke.js         # 25 API smoke tests
-├── AGENTS.md
-└── package.json
+│   ├── index.html            # Landing page (premium navy/gold)
+│   ├── rider/                # HiWay Rider SPA (mobile-first PWA)
+│   │   └── index.html        #  — the passenger app
+│   └── driver/               # HiWay Driver SPA (mobile-first PWA)
+│       └── index.html        #  — the driver partner app
+├── packages/web/             # React SPA (shuttle bookings)
+├── packages/api/             # TypeScript API workspace (future)
+├── agents/
+│   ├── hiway-rider/SKILL.md  # Rider Agent constitution
+│   └── hiway-driver/SKILL.md # Driver Agent constitution
+├── data/                     # Persisted bookings (gitignored)
+├── test/smoke.js             # API smoke tests
+├── Dockerfile                # Containerized deployment
+└── fly.toml                  # Fly.io config
 ```
 
-## Conventions
+## Agents
 
-- **Style**: CommonJS (`require`/`module.exports`), no async IIFE at top level.
-- **Error handling**: All async handlers wrapped in try/catch that logs and swallows errors — never let a webhook or poller crash.
-- **Bot modules**: Factory functions (`createTelegramBot`, `createMessengerBot`) that receive dependencies (data accessors, booking ID ref) as parameters — no global state.
-- **Booking ID**: Managed via `bookingIdRef` (a mutable ref object with `value` property) passed from `server.js` to bot modules.
-- **Config**: Loaded at module scope in bot files (re-read on server restart). Admin CRUD in `server.js` persists via `persistConfig()`.
-- **API**: Public endpoints under `/api/`, admin under `/api/admin/` (requires `X-API-Key` header or `?api_key=` query param).
-- **HTTP status codes**: 200 success, 201 created, 400 bad request, 401 unauthorized, 404 not found, 409 conflict, 503 service unavailable.
+Two specialized agents live in `agents/`:
+
+### HiWay Rider Agent (`agents/hiway-rider/SKILL.md`)
+Use when building features for the passenger app. Knows:
+- WebSocket protocol for ride matching
+- Subscription tiers (Premium/Business/Commuter)
+- Zero-surge pricing engine
+- Safety anomaly detection system
+- Bottom-sheet UI architecture
+
+### HiWay Driver Agent (`agents/hiway-driver/SKILL.md`)
+Use when building features for the driver app. Knows:
+- 100% driver earnings model
+- Real-time location sharing protocol
+- Ride dispatch lifecycle (15s accept window)
+- Dark-optimized map and UI
+- Online/offline state machine
 
 ## Running
 
 ```bash
-cp .env.example .env   # fill in TELEGRAM_BOT_TOKEN at minimum
 npm install
-npm start              # starts on port 3000
+npm start              # Shuttle API on port 3000
+# Rider:  http://localhost:3000/rider/
+# Driver: http://localhost:3000/driver/
+# Shuttle: http://localhost:3000/
 ```
 
-## Testing
+## Key Revolutionary Principles
 
-```bash
-npm test               # starts server, runs smoke tests, kills server
-```
+- **Zero surge pricing** — fixed rates, subscription discounts instead
+- **Drivers keep 100%** — no commission, ever
+- **AI-powered matching** — composite score (proximity + rating + demand prediction)
+- **Real-time safety** — anomaly detection, share trip, emergency alerts
+- **Transparent pricing** — fare breakdown before every ride
 
-The smoke test (`test/smoke.js`) uses Node's built-in `http` module — no test framework dependency.
+## Testing Rideshare
 
-## Bot Patterns
-
-- **Telegram**: Handles `message` and `callback_query` updates. Callback data format: `action_routeId` or `action_routeId_index`. Navigation via inline keyboards.
-- **Messenger**: Handles text messages and postbacks. Quick replies for route selection. Booking confirmation uses `messengerId` field.
-- Both bots load config JSON at module scope independently of `server.js`.
-
-## Adding a Feature
-
-1. Add API route in `server.js` if needed.
-2. Wire up store/bot functions.
-3. Update the bot handler(s) in `bots/`.
-4. Add test assertions in `test/smoke.js`.
-5. Restart server to pick up config changes (configs are cached in memory).
-
-## Mini App
-
-The Mini App (`public/mini-app/index.html`) is a standalone SPA. Currently does **not** persist bookings to the server — it simulates confirmation client-side. No auth integration.
+1. Open Rider app (`/rider/`) — set dropoff, request ride
+2. Open Driver app (`/driver/`) — go online, accept ride
+3. Watch real-time location tracking on the map
+4. Complete ride to see earnings update
