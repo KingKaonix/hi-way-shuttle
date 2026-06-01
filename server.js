@@ -61,6 +61,8 @@ app.use(bodyParser.urlencoded({ extended: true }));
 // Serve static assets only (not index.html — handled by custom routes below)
 app.use('/assets', express.static(path.join(reactDist, 'assets')));
 app.use('/mini-app', express.static(path.join(__dirname, 'public', 'mini-app')));
+app.use('/rider', express.static(path.join(__dirname, 'public', 'rider')));
+app.use('/driver', express.static(path.join(__dirname, 'public', 'driver')));
 app.use('/favicon.svg', express.static(path.join(reactDist, 'favicon.svg')));
 
 // --- Load config ---
