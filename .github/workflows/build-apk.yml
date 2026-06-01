@@ -38,13 +38,25 @@ jobs:
       - name: Prebuild native Android project
         run: ./node_modules/.bin/expo prebuild --clean --no-install
 
-      - name: Patch Kotlin version for Compose compiler compat
+      - name: Patch Kotlin/Compose versions for compat
         run: |
-          # Fix Kotlin version mismatch in generated build.gradle files
-          find android/ -name "*.gradle*" -type f -exec sed -i \
-            's/kotlin("1\.9\.24")/kotlin("1.9.25")/g; s/org\.jetbrains\.kotlin\.android" version "1\.9\.24"/org.jetbrains.kotlin.android" version "1.9.25"/g; s/ext\.kotlin_version = "1\.9\.24"/ext.kotlin_version = "1.9.25"/g' {} +
+          # 1) Upgrade Kotlin to 1.9.25 (needed by Compose Compiler 1.5.15)
+          find android/ -type f \( -name "*.gradle" -o -name "*.gradle.kts" -o -name "*.properties" \) \
+            -exec sed -i 's/1\.9\.24/1.9.25/g' {} +
+          echo "kotlinVersion=1.9.25" >> android/gradle.properties
+          
+          # 2) In case Kotlin replacement isn't picked up, also downgrade Compose Compiler to 1.5.14
+          if [ -d "node_modules/expo-modules-core" ]; then
+            find node_modules/expo-modules-core -name "*.gradle" -exec sed -i 's/1\.5\.15/1.5.14/g' {} +
+          fi
+          
+          # Show what was changed
+          echo "=== Gradle files using Kotlin 1.9.25 ==="
+          grep -rn "1\.9\.25" android/ --include="*.gradle" --include="*.properties" | head -10
+          echo "=== Gradle files using Compose 1.5.14 ==="
+          grep -rn "1\.5\.14\|1\.5\.15" node_modules/expo-modules-core --include="*.gradle" 2>/dev/null | head -5
 
-      - name: Setup Java
+      - name: Setup Java 17
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
