@@ -38,6 +38,12 @@ jobs:
       - name: Prebuild native Android project
         run: npx expo prebuild --clean --no-install
 
+      - name: Patch Kotlin version for Compose compiler compat
+        run: |
+          # Fix Kotlin version mismatch in generated build.gradle files
+          find android/ -name "*.gradle*" -type f -exec sed -i \
+            's/kotlin("1\.9\.24")/kotlin("1.9.25")/g; s/org\.jetbrains\.kotlin\.android" version "1\.9\.24"/org.jetbrains.kotlin.android" version "1.9.25"/g; s/ext\.kotlin_version = "1\.9\.24"/ext.kotlin_version = "1.9.25"/g' {} +
+
       - name: Setup Java
         uses: actions/setup-java@v4
         with:
