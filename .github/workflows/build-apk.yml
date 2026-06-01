@@ -53,19 +53,8 @@ jobs:
         with:
           node-version: 20
 
-      - name: Install Expo CLI
-        run: npm install -g expo-cli@latest
-
-      - name: Cache node_modules
-        uses: actions/cache@v4
-        with:
-          path: apps/${{ matrix.app }}/node_modules
-          key: ${{ runner.os }}-node-${{ matrix.app }}-${{ hashFiles('apps/${{ matrix.app }}/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-node-${{ matrix.app }}-
-
       - name: Install dependencies
-        run: npm ci
+        run: npm install
 
       - name: Prebuild native Android project
         run: npx expo prebuild --clean --no-install
