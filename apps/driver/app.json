@@ -7,34 +7,63 @@
     "icon": "./assets/icon.png",
     "scheme": "hiway-driver",
     "userInterfaceStyle": "dark",
-    "splash": { "backgroundColor": "#0a1628", "resizeMode": "contain" },
-    "assetBundlePatterns": ["**/*"],
+    "splash": {
+      "backgroundColor": "#0a1628",
+      "resizeMode": "contain"
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.hiway.driver",
       "infoPlist": {
         "NSLocationAlwaysAndWhenInUseUsageDescription": "Your location is shared with riders during active trips.",
-        "UIBackgroundModes": ["location", "fetch"]
+        "UIBackgroundModes": [
+          "location",
+          "fetch"
+        ]
       }
     },
     "android": {
-      "adaptiveIcon": { "backgroundColor": "#0a1628" },
+      "adaptiveIcon": {
+        "backgroundColor": "#0a1628"
+      },
       "package": "com.hiway.driver",
-      "config": { "googleMaps": { "apiKey": "YOUR_GOOGLE_MAPS_API_KEY" } },
+      "config": {
+        "googleMaps": {
+          "apiKey": "YOUR_GOOGLE_MAPS_API_KEY"
+        }
+      },
       "permissions": [
-        "ACCESS_FINE_LOCATION", "ACCESS_COARSE_LOCATION",
-        "ACCESS_BACKGROUND_LOCATION", "FOREGROUND_SERVICE_LOCATION"
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION",
+        "ACCESS_BACKGROUND_LOCATION",
+        "FOREGROUND_SERVICE_LOCATION"
       ]
     },
     "plugins": [
-      ["expo-location", {
-        "locationAlwaysAndWhenInUsePermission": "Your location is shared with riders during active trips.",
-        "locationWhenInUsePermission": "Your location is shared with riders during active trips.",
-        "isIosBackgroundLocationEnabled": true,
-        "isAndroidBackgroundLocationEnabled": true
-      }],
-      "expo-notifications"
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "Your location is shared with riders during active trips.",
+          "locationWhenInUsePermission": "Your location is shared with riders during active trips.",
+          "isIosBackgroundLocationEnabled": true,
+          "isAndroidBackgroundLocationEnabled": true
+        }
+      ],
+      "expo-notifications",
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "kotlinVersion": "1.9.25"
+          }
+        }
+      ]
     ],
-    "extra": { "apiUrl": "https://hi-way-shuttle.fly.dev" }
+    "extra": {
+      "apiUrl": "https://hi-way-shuttle.fly.dev"
+    }
   }
 }

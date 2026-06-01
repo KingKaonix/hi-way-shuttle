@@ -11,7 +11,9 @@
       "backgroundColor": "#0a1628",
       "resizeMode": "contain"
     },
-    "assetBundlePatterns": ["**/*"],
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.hiway.rider",
@@ -25,7 +27,9 @@
       },
       "package": "com.hiway.rider",
       "config": {
-        "googleMaps": { "apiKey": "YOUR_GOOGLE_MAPS_API_KEY" }
+        "googleMaps": {
+          "apiKey": "YOUR_GOOGLE_MAPS_API_KEY"
+        }
       },
       "permissions": [
         "ACCESS_FINE_LOCATION",
@@ -41,7 +45,15 @@
           "locationWhenInUsePermission": "Your location is used to find nearby drivers and track your ride."
         }
       ],
-      "expo-notifications"
+      "expo-notifications",
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "kotlinVersion": "1.9.25"
+          }
+        }
+      ]
     ],
     "extra": {
       "apiUrl": "https://hi-way-shuttle.fly.dev"
