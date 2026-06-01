@@ -49,6 +49,9 @@ jobs:
             "platform-tools" \
             --sdk_root=$ANDROID_HOME > /dev/null 2>&1 || true
 
+      - name: Install ImageMagick (required by Expo)
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq imagemagick
+
       - uses: actions/setup-node@v4
         with:
           node-version: 20
