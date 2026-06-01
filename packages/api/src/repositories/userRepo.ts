@@ -13,7 +13,7 @@ export const userRepo = {
       .first();
   },
 
-  async create(data: { email: string; name: string; password_hash: string; role?: string }): Promise<UserPublic> {
+  async create(data: { email: string; name: string; password_hash: string; role?: string; phone?: string }): Promise<UserPublic> {
     const [id] = await db('users').insert(data);
     return this.findById(id) as Promise<UserPublic>;
   },

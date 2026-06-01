@@ -88,9 +88,20 @@ function persistConfig() {
 
 function requireAdmin(req, res, next) {
   if (!ADMIN_KEY) return res.status(503).json({ error: 'Admin API not configured (set ADMIN_API_KEY)' });
+  
+  // Check X-API-Key header or query param
   const key = req.headers['x-api-key'] || req.query.api_key;
-  if (key !== ADMIN_KEY) return res.status(401).json({ error: 'Unauthorized' });
-  next();
+  if (key === ADMIN_KEY) return next();
+  
+  // Check Bearer token (web client auth — users logged in with admin role)
+  const auth = req.headers.authorization;
+  if (auth && auth.startsWith('Bearer ')) {
+    const token = auth.slice(7);
+    const user = tokens[token];
+    if (user && user.role === 'admin') return next();
+  }
+  
+  return res.status(401).json({ error: 'Unauthorized' });
 }
 
 // --- Init bot modules ---

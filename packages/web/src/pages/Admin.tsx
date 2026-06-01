@@ -341,18 +341,18 @@ export default function Admin() {
                   <label className="label">Base Fare ($)</label>
                   <input className="input-field" type="number" step="0.1"
                     value={fares?.base_fare ?? 3.5}
-                    onChange={e => setFares(f => ({ ...f, base_fare: parseFloat(e.target.value) || 0 }))} />
+                    onChange={e => setFares((f: any) => ({ ...f, base_fare: parseFloat(e.target.value) || 0 }))} />
                 </div>
                 <div>
                   <label className="label">Per Stop Fare ($)</label>
                   <input className="input-field" type="number" step="0.1"
                     value={fares?.per_stop ?? 1.5}
-                    onChange={e => setFares(f => ({ ...f, per_stop: parseFloat(e.target.value) || 0 }))} />
+                    onChange={e => setFares((f: any) => ({ ...f, per_stop: parseFloat(e.target.value) || 0 }))} />
                 </div>
                 <div>
                   <label className="label">Currency</label>
                   <input className="input-field" value={fares?.currency ?? 'USD'}
-                    onChange={e => setFares(f => ({ ...f, currency: e.target.value }))} />
+                    onChange={e => setFares((f: any) => ({ ...f, currency: e.target.value }))} />
                 </div>
                 <button onClick={() => handleSaveGlobalFare({ base_fare: fares?.base_fare, per_stop: fares?.per_stop, currency: fares?.currency })}
                   className="btn-gold w-full !py-2.5"><Save className="w-4 h-4" /> Save Global Settings</button>

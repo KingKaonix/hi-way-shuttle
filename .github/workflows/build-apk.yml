@@ -1,0 +1,83 @@
+name: Build Android APKs
+
+'on':
+  workflow_dispatch:
+    inputs:
+      build_type:
+        description: 'Build type'
+        required: true
+        default: 'release'
+        type: choice
+        options:
+          - release
+          - debug
+  push:
+    branches: [main]
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        app: [rider, driver]
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/${{ matrix.app }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Accept Android licenses
+        run: |
+          yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses > /dev/null 2>&1 || true
+
+      - name: Install required Android SDK components
+        run: |
+          $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager \
+            "platforms;android-34" \
+            "build-tools;34.0.0" \
+            "platform-tools" \
+            --sdk_root=$ANDROID_HOME > /dev/null 2>&1 || true
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install Expo CLI
+        run: npm install -g expo-cli@latest
+
+      - name: Cache node_modules
+        uses: actions/cache@v4
+        with:
+          path: apps/${{ matrix.app }}/node_modules
+          key: ${{ runner.os }}-node-${{ matrix.app }}-${{ hashFiles('apps/${{ matrix.app }}/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-${{ matrix.app }}-
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Prebuild native Android project
+        run: npx expo prebuild --clean --no-install
+
+      - name: Build APK
+        run: |
+          cd android
+          BUILDTYPE=$(echo ${{ github.event.inputs.build_type || 'release' }} | sed 's/^./\u&/')
+          ./gradlew "assemble${BUILDTYPE}"
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: hiway-${{ matrix.app }}-${{ github.event.inputs.build_type || 'release' }}
+          path: apps/${{ matrix.app }}/android/app/build/outputs/apk/**/*.apk
