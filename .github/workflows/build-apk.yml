@@ -36,7 +36,7 @@ jobs:
         run: npm install
 
       - name: Prebuild native Android project
-        run: npx expo prebuild --clean --no-install
+        run: ./node_modules/.bin/expo prebuild --clean --no-install
 
       - name: Patch Kotlin version for Compose compiler compat
         run: |
