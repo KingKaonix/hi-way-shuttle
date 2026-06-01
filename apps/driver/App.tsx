@@ -38,7 +38,7 @@ export default function App() {
           name: displayName,
           vehicle: 'Sedan',
           licensePlate: 'HIWAY',
-          email: `driver_${Date.now()}@hiway.driver',
+          email: `driver_${Date.now()}@hiway.driver`,
         });
         id = result.driver.id;
         name = result.driver.name;
