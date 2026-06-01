@@ -45,19 +45,26 @@ jobs:
           java-version: '17'
 
       - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
+        uses: android-actions/setup-android@v4.0.1
+        continue-on-error: true
 
-      - name: Accept Android licenses
+      - name: Accept Android licenses (retry)
         run: |
-          yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses > /dev/null 2>&1 || true
+          for i in 1 2 3; do
+            $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses < /dev/null && break
+            sleep 5
+          done
 
-      - name: Install required Android SDK components
+      - name: Install required Android SDK components (retry)
         run: |
-          $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager \
-            "platforms;android-34" \
-            "build-tools;34.0.0" \
-            "platform-tools" \
-            --sdk_root=$ANDROID_HOME > /dev/null 2>&1 || true
+          for i in 1 2 3; do
+            $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager \
+              "platforms;android-34" \
+              "build-tools;34.0.0" \
+              "platform-tools" \
+              --sdk_root=$ANDROID_HOME < /dev/null && break
+            sleep 5
+          done
 
       - name: Build APK
         run: |
