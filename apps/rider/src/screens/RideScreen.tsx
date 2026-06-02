@@ -3,12 +3,14 @@ import {
   View, Text, TouchableOpacity, StyleSheet, Alert,
   ActivityIndicator, Animated, Vibration,
 } from 'react-native';
-import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
+import { Map, Camera, UserLocation } from '@maplibre/maplibre-react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
 import { RootStackParamList } from '../../App';
 import { api } from '../api/client';
+
+const MAP_STYLE = 'https://tiles.openfreemap.org/styles/liberty';
 
 type Props = {
   navigation: NativeStackNavigationProp<RootStackParamList, 'Ride'>;
@@ -77,14 +79,20 @@ export default function RideScreen({ navigation }: Props) {
 
   return (
     <View style={{ flex: 1, backgroundColor: '#0a1628' }}>
-      <MapView
+      <Map
         style={{ flex: 1 }}
-        initialRegion={{
-          latitude: 40.7128, longitude: -74.006,
-          latitudeDelta: 0.02, longitudeDelta: 0.02,
-        }}
-        showsUserLocation
-      />
+        styleURL={MAP_STYLE}
+        logoPosition={{ bottom: 8, left: 8 }}
+      >
+        <Camera
+          defaultSettings={{
+            centerCoordinate: [-74.006, 40.7128],
+            zoomLevel: 14,
+          }}
+          animationDuration={500}
+        />
+        <UserLocation visible showsUserHeadingIndicator />
+      </Map>
 
       {/* Top bar */}
       <SafeAreaView style={styles.topBar}>
@@ -135,8 +143,8 @@ export default function RideScreen({ navigation }: Props) {
             <View style={styles.statDivider} />
             <View style={styles.stat}>
               <Text style={styles.statLabel}>Status</Text>
-              <Text style={[styles.statValue, { color: STATUS_COLORS[status], fontSize: 12 }]}>
-                {status.charAt(0).toUpperCase() + status.slice(1)}
+              <Text style={[styles.statValue, { fontSize: 13, color: STATUS_COLORS[status] }]}>
+                {statusLabel(status)}
               </Text>
             </View>
           </View>

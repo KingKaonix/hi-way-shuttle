@@ -3,7 +3,7 @@ import {
   View, Text, TouchableOpacity, StyleSheet, Alert, Vibration,
   ActivityIndicator, Animated, Dimensions, ScrollView,
 } from 'react-native';
-import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
+import { Map, Camera, UserLocation } from '@maplibre/maplibre-react-native';
 import * as Location from 'expo-location';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -14,6 +14,7 @@ import { RootStackParamList } from '../../App';
 
 const { width, height } = Dimensions.get('window');
 const ASPECT_RATIO = width / height;
+const MAP_STYLE = 'https://tiles.openfreemap.org/styles/liberty';
 
 type Props = {
   navigation: NativeStackNavigationProp<RootStackParamList, 'Home'>;
@@ -31,6 +32,10 @@ export default function HomeScreen({ navigation, driverId, driverName }: Props) 
   const [rating, setRating] = useState(5.0);
   const [requestTimer, setRequestTimer] = useState(15);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const [camera, setCamera] = useState({
+    centerCoordinate: [-74.006, 40.7128] as [number, number],
+    zoomLevel: 14,
+  });
 
   useEffect(() => {
     (async () => {
@@ -46,6 +51,10 @@ export default function HomeScreen({ navigation, driverId, driverName }: Props) 
         (pos) => {
           const coords = { lat: pos.coords.latitude, lng: pos.coords.longitude };
           setLocation(coords);
+          setCamera({
+            centerCoordinate: [pos.coords.longitude, pos.coords.latitude],
+            zoomLevel: 14,
+          });
           if (online) {
             api.driver.setStatus(driverId, { online: true, ...coords }).catch(() => {});
           }
@@ -136,14 +145,23 @@ export default function HomeScreen({ navigation, driverId, driverName }: Props) 
   return (
     <View style={{ flex: 1, backgroundColor: '#0a1628' }}>
       {/* Map */}
-      <MapView
+      <Map
         style={{ flex: 1 }}
-        initialRegion={{
-          latitude: location.lat, longitude: location.lng,
-          latitudeDelta: 0.02, longitudeDelta: 0.02 * ASPECT_RATIO,
-        }}
-        showsUserLocation
-      />
+        styleURL={MAP_STYLE}
+        logoPosition={{ bottom: 8, left: 8 }}
+      >
+        <Camera
+          defaultSettings={{
+            centerCoordinate: [-74.006, 40.7128],
+            zoomLevel: 14,
+          }}
+          centerCoordinate={camera.centerCoordinate}
+          zoomLevel={camera.zoomLevel}
+          animationDuration={500}
+          animationMode="flyTo"
+        />
+        <UserLocation visible showsUserHeadingIndicator />
+      </Map>
 
       {/* Top bar */}
       <SafeAreaView style={styles.topBar}>
@@ -153,18 +171,18 @@ export default function HomeScreen({ navigation, driverId, driverName }: Props) 
           </View>
           <View>
             <Text style={styles.driverName}>{driverName}</Text>
-            <Text style={styles.statusText}>{online ? 'Online · Accepting rides' : 'Offline'}</Text>
+            <Text style={styles.statusText}>{online ? 'Online' : 'Offline'}</Text>
           </View>
         </View>
         <TouchableOpacity
           style={[styles.toggleBtn, online ? styles.toggleOn : styles.toggleOff]}
           onPress={toggleOnline}
         >
-          <Text style={styles.toggleText}>{online ? 'ONLINE' : 'OFFLINE'}</Text>
+          <Text style={styles.toggleText}>{online ? 'ON' : 'OFF'}</Text>
         </TouchableOpacity>
       </SafeAreaView>
 
-      {/* Ride request */}
+      {/* Ride request card */}
       {showRequest && (
         <View style={styles.requestCard}>
           <View style={styles.requestHeader}>
@@ -172,15 +190,15 @@ export default function HomeScreen({ navigation, driverId, driverName }: Props) 
             <Text style={styles.requestTimer}>{requestTimer}s</Text>
           </View>
           <View style={styles.requestRow}>
-            <Ionicons name="location" size={20} color="#10b981" />
-            <Text style={styles.requestText}>Downtown · 0.5 mi away</Text>
+            <Ionicons name="location" size={16} color="#10b981" />
+            <Text style={styles.requestText}>Downtown · 0.8 mi away</Text>
           </View>
           <View style={styles.requestRow}>
-            <Ionicons name="flag" size={20} color="#ef4444" />
-            <Text style={styles.requestText}>Airport · 8.2 mi</Text>
+            <Ionicons name="navigate" size={16} color="#c9952b" />
+            <Text style={styles.requestText}>Airport Terminal 2</Text>
           </View>
           <View style={styles.requestFare}>
-            <Text style={styles.fareLabel}>You earn</Text>
+            <Text style={styles.fareLabel}>Est. Fare</Text>
             <Text style={styles.fareAmount}>$12.50</Text>
           </View>
           <View style={styles.requestActions}>
@@ -188,7 +206,7 @@ export default function HomeScreen({ navigation, driverId, driverName }: Props) 
               <Text style={styles.declineText}>Decline</Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.acceptBtn} onPress={acceptRide}>
-              <Text style={styles.acceptText}>Accept — $12.50</Text>
+              <Text style={styles.acceptText}>Accept</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -199,34 +217,34 @@ export default function HomeScreen({ navigation, driverId, driverName }: Props) 
         <View style={styles.activeCard}>
           <View style={styles.activeHeader}>
             <View style={styles.activeDot} />
-            <Text style={styles.activeStatus}>En route to pickup</Text>
+            <Text style={styles.activeStatus}>Active Ride</Text>
             <Text style={styles.activeFare}>${activeRide.fare.toFixed(2)}</Text>
           </View>
           <View style={styles.activeRoute}>
             <View style={styles.routeLine} />
             <View>
-              <Text style={styles.routePickup}>Downtown</Text>
-              <Text style={styles.routeDropoff}>→ Airport</Text>
+              <Text style={styles.routePickup}>Downtown · 2 min away</Text>
+              <Text style={styles.routeDropoff}>Airport Terminal 2 · 18 min</Text>
             </View>
           </View>
           <View style={styles.activeActions}>
             <TouchableOpacity style={styles.completeBtn} onPress={completeRide}>
-              <Text style={styles.completeText}>✓ Complete</Text>
+              <Text style={styles.completeText}>Complete Trip</Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.cancelActiveBtn} onPress={cancelRide}>
-              <Text style={styles.cancelActiveText}>Cancel</Text>
+              <Ionicons name="close" size={20} color="#ef4444" />
             </TouchableOpacity>
           </View>
         </View>
       )}
 
-      {/* Bottom stats */}
-      {!showRequest && !activeRide && (
+      {/* Stats (when idle) */}
+      {!activeRide && !showRequest && (
         <View style={styles.statsCard}>
           <View style={styles.statsRow}>
             <View style={styles.stat}>
               <Text style={styles.statLabel}>Earnings</Text>
-              <Text style={styles.statValueGold}>${earnings.toFixed(0)}</Text>
+              <Text style={styles.statValueGold}>${earnings.toFixed(2)}</Text>
             </View>
             <View style={styles.stat}>
               <Text style={styles.statLabel}>Trips</Text>

@@ -30,11 +30,6 @@
         "backgroundColor": "#0a1628"
       },
       "package": "com.hiway.driver",
-      "config": {
-        "googleMaps": {
-          "apiKey": "YOUR_GOOGLE_MAPS_API_KEY"
-        }
-      },
       "permissions": [
         "ACCESS_FINE_LOCATION",
         "ACCESS_COARSE_LOCATION",

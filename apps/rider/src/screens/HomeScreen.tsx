@@ -4,7 +4,7 @@ import {
   ActivityIndicator, KeyboardAvoidingView, Platform, ScrollView,
   Dimensions, Animated,
 } from 'react-native';
-import MapView, { Marker, Callout, PROVIDER_GOOGLE } from 'react-native-maps';
+import { Map, Camera, Marker, UserLocation } from '@maplibre/maplibre-react-native';
 import * as Location from 'expo-location';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -13,6 +13,9 @@ import { RootStackParamList } from '../../App';
 
 const { width, height } = Dimensions.get('window');
 const ASPECT_RATIO = width / height;
+
+// Free OpenStreetMap tile style via OpenFreeMap
+const MAP_STYLE = 'https://tiles.openfreemap.org/styles/liberty';
 
 type Props = {
   navigation: NativeStackNavigationProp<RootStackParamList, 'Home'>;
@@ -30,7 +33,6 @@ const PLACES = [
 ];
 
 export default function HomeScreen({ navigation, riderId, riderName }: Props) {
-  const mapRef = useRef<MapView>(null);
   const [location, setLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [dropoff, setDropoff] = useState<{ lat: number; lng: number; name: string } | null>(null);
   const [fare, setFare] = useState<any>(null);
@@ -38,7 +40,14 @@ export default function HomeScreen({ navigation, riderId, riderName }: Props) {
   const [searchResults, setSearchResults] = useState<typeof PLACES>([]);
   const [booking, setBooking] = useState(false);
   const [subscription, setSubscription] = useState<any>(null);
+  const [camera, setCamera] = useState({
+    centerCoordinate: [-74.006, 40.7128] as [number, number],
+    zoomLevel: 12,
+    bounds: null as any,
+    padding: null as any,
+  });
   const sheetAnim = useRef(new Animated.Value(0)).current;
+  const mapReady = useRef(false);
 
   useEffect(() => {
     (async () => {
@@ -50,12 +59,11 @@ export default function HomeScreen({ navigation, riderId, riderName }: Props) {
       const loc = await Location.getCurrentPositionAsync({});
       const coords = { lat: loc.coords.latitude, lng: loc.coords.longitude };
       setLocation(coords);
-      mapRef.current?.animateToRegion({
-        latitude: coords.lat,
-        longitude: coords.lng,
-        latitudeDelta: 0.05,
-        longitudeDelta: 0.05 * ASPECT_RATIO,
-      }, 1000);
+      setCamera(prev => ({
+        ...prev,
+        centerCoordinate: [coords.lng, coords.lat],
+        zoomLevel: 14,
+      }));
     })();
 
     // Load subscription
@@ -77,13 +85,21 @@ export default function HomeScreen({ navigation, riderId, riderName }: Props) {
     setSearchResults([]);
 
     if (location) {
-      mapRef.current?.fitToCoordinates(
-        [
-          { latitude: location.lat, longitude: location.lng },
-          { latitude: place.lat, longitude: place.lng },
-        ],
-        { edgePadding: { top: 100, right: 50, bottom: 350, left: 50 }, animated: true }
-      );
+      // Fit camera to show both pickup and dropoff
+      const minLat = Math.min(location.lat, place.lat);
+      const maxLat = Math.max(location.lat, place.lat);
+      const minLng = Math.min(location.lng, place.lng);
+      const maxLng = Math.max(location.lng, place.lng);
+
+      setCamera({
+        centerCoordinate: [(minLng + maxLng) / 2, (minLat + maxLat) / 2],
+        zoomLevel: 12,
+        bounds: {
+          ne: [maxLng + 0.01, maxLat + 0.01] as [number, number],
+          sw: [minLng - 0.01, minLat - 0.01] as [number, number],
+        },
+        padding: { top: 100, right: 50, bottom: 350, left: 50 },
+      });
 
       // Get fare estimate
       try {
@@ -115,26 +131,35 @@ export default function HomeScreen({ navigation, riderId, riderName }: Props) {
   return (
     <View style={{ flex: 1, backgroundColor: '#0a1628' }}>
       {/* Map */}
-      <MapView
-        ref={mapRef}
+      <Map
         style={{ flex: 1 }}
-        initialRegion={{
-          latitude: 40.7128,
-          longitude: -74.006,
-          latitudeDelta: 0.05,
-          longitudeDelta: 0.05 * ASPECT_RATIO,
-        }}
-        showsUserLocation
-        showsMyLocationButton
+        styleURL={MAP_STYLE}
+        logoPosition={{ bottom: 8, left: 8 }}
+        compassEnabled
       >
+        <Camera
+          defaultSettings={{
+            centerCoordinate: [-74.006, 40.7128],
+            zoomLevel: 12,
+          }}
+          centerCoordinate={camera.centerCoordinate}
+          zoomLevel={camera.zoomLevel}
+          bounds={camera.bounds}
+          padding={camera.padding}
+          animationDuration={500}
+          animationMode="flyTo"
+        />
+
+        <UserLocation showsUserHeadingIndicator visible />
+
         {dropoff && (
-          <Marker
-            coordinate={{ latitude: dropoff.lat, longitude: dropoff.lng }}
-            title={dropoff.name}
-            pinColor="#ef4444"
-          />
+          <Marker id="dropoff" lngLat={[dropoff.lng, dropoff.lat]}>
+            <View style={styles.markerPin}>
+              <View style={styles.markerInner} />
+            </View>
+          </Marker>
         )}
-      </MapView>
+      </Map>
 
       {/* Top bar */}
       <SafeAreaView style={styles.topBar}>
@@ -144,30 +169,36 @@ export default function HomeScreen({ navigation, riderId, riderName }: Props) {
         </View>
         {subscription?.tier && subscription.tier !== 'none' && (
           <View style={styles.subBadge}>
-            <Text style={styles.subBadgeText}>✦ {subscription.tier}</Text>
+            <Text style={styles.subBadgeText}>{subscription.tier.toUpperCase()}</Text>
           </View>
         )}
       </SafeAreaView>
 
       {/* Bottom sheet */}
-      <Animated.View style={[
-        styles.bottomSheet,
-        { transform: [{ translateY: sheetAnim.interpolate({
-          inputRange: [0, 1],
-          outputRange: [300, 0],
-        })}] }
-      ]}>
-        <View style={styles.handle} />
+      <Animated.View
+        style={[
+          styles.bottomSheet,
+          {
+            transform: [{
+              translateY: sheetAnim.interpolate({
+                inputRange: [0, 1],
+                outputRange: [300, 0],
+              }),
+            }],
+          },
+        ]}
+      >
+        <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+          <ScrollView keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
+            <View style={styles.handle} />
 
-        <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
-          <ScrollView>
-            {/* Dropoff search */}
+            {/* Search */}
             <View style={styles.searchContainer}>
               <View style={styles.locationDot} />
               <TextInput
                 style={styles.searchInput}
                 placeholder="Where to?"
-                placeholderTextColor="#64748b"
+                placeholderTextColor="#94a3b8"
                 value={searchQuery}
                 onChangeText={searchPlaces}
               />
@@ -175,27 +206,25 @@ export default function HomeScreen({ navigation, riderId, riderName }: Props) {
 
             {searchResults.length > 0 && (
               <View style={styles.searchResults}>
-                {searchResults.map((place, i) => (
+                {searchResults.map((p, i) => (
                   <TouchableOpacity
                     key={i}
                     style={styles.searchResult}
-                    onPress={() => selectDropoff(place)}
+                    onPress={() => selectDropoff(p)}
                   >
                     <View style={styles.searchResultIcon}>
-                      <Text style={{ fontSize: 16 }}>📍</Text>
+                      <Text>📍</Text>
                     </View>
                     <View>
-                      <Text style={styles.searchResultName}>{place.name}</Text>
-                      <Text style={styles.searchResultAddr}>
-                        {place.lat.toFixed(4)}, {place.lng.toFixed(4)}
-                      </Text>
+                      <Text style={styles.searchResultName}>{p.name}</Text>
+                      <Text style={styles.searchResultAddr}>New York, NY</Text>
                     </View>
                   </TouchableOpacity>
                 ))}
               </View>
             )}
 
-            {/* Fare card */}
+            {/* Fare estimate */}
             {fare && (
               <View style={styles.fareCard}>
                 <View style={styles.fareRow}>
@@ -206,22 +235,27 @@ export default function HomeScreen({ navigation, riderId, riderName }: Props) {
                     </Text>
                   </View>
                   <View style={styles.fareDetails}>
-                    <Text style={styles.fareDetail}>{fare.distance} km</Text>
-                    <Text style={styles.fareDetail}>{fare.duration} min</Text>
-                  </View>
-                </View>
-                {fare.discount > 0 && (
-                  <View style={styles.discountBadge}>
-                    <Text style={styles.discountText}>
-                      ✦ Subscription: {fare.discount}% off
+                    <Text style={styles.fareDetail}>
+                      {fare.distance.toFixed(1)} mi
+                    </Text>
+                    <Text style={styles.fareDetail}>
+                      {fare.duration} min
                     </Text>
                   </View>
-                )}
-                <View style={styles.fareBreakdown}>
-                  <Text style={styles.breakdownText}>
-                    Base ${fare.breakdown.baseFare.toFixed(2)} · Distance ${fare.breakdown.distance.toFixed(2)} · Time ${fare.breakdown.time.toFixed(2)}
-                  </Text>
                 </View>
+
+                {(fare.discount || 0) > 0 && (
+                  <View style={styles.discountBadge}>
+                    <Text style={styles.discountText}>
+                      {fare.subscriptionTier} discount — save ${fare.discount.toFixed(2)}
+                    </Text>
+                    <View style={styles.fareBreakdown}>
+                      <Text style={styles.breakdownText}>
+                        Base: ${fare.breakdown.base.toFixed(2)} · Per mi: ${fare.breakdown.perMile.toFixed(2)} · Time: ${fare.breakdown.time.toFixed(2)}
+                      </Text>
+                    </View>
+                  </View>
+                )}
 
                 <TouchableOpacity
                   style={[styles.requestBtn, booking && styles.requestBtnDisabled]}
@@ -397,4 +431,25 @@ const styles = StyleSheet.create({
     borderRadius: 20,
   },
   featureText: { fontSize: 11, color: '#475569' },
+  markerPin: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: '#ef4444',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 3,
+    borderColor: '#fff',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 4,
+  },
+  markerInner: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#fff',
+  },
 });
