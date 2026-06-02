@@ -56,6 +56,13 @@ export default function EarningsScreen({ navigation }: Props) {
             <Text style={styles.summaryStatValue}>{trips}</Text>
             <Text style={styles.summaryStatLabel}>Trips</Text>
           </View>
+          <TouchableOpacity style={styles.payoutBtn} onPress={() => navigation.navigate('Payout')}>
+            <Ionicons name="wallet-outline" size={18} color="#c9952b" />
+            <Text style={styles.payoutBtnText}>Payouts</Text>
+            <Ionicons name="chevron-forward" size={16} color="#c9952b" />
+          </TouchableOpacity>
+
+          </View>
           <View style={styles.summaryStat}>
             <Text style={styles.summaryStatValue}>{rating.toFixed(1)}</Text>
             <Text style={styles.summaryStatLabel}>Rating</Text>
@@ -108,6 +115,14 @@ const styles = StyleSheet.create({
     color: '#c9952b', marginTop: 4,
   },
   summarySub: { color: '#10b981', fontSize: 12, fontWeight: '600', marginTop: 4 },
+  payoutBtn: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
+    gap: 6, marginTop: 16, padding: 12,
+    backgroundColor: 'rgba(201,149,43,0.1)', borderRadius: 12,
+    borderWidth: 1, borderColor: 'rgba(201,149,43,0.2)',
+  },
+  payoutBtnText: { color: '#c9952b', fontWeight: '600', fontSize: 14 },
+
   summaryRow: { flexDirection: 'row', gap: 12 },
   summaryStat: {
     flex: 1, backgroundColor: 'rgba(30,58,95,0.3)', borderRadius: 14,

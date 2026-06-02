@@ -9,12 +9,14 @@ import { View, Text, ActivityIndicator, StyleSheet } from 'react-native';
 import { api } from './src/api/client';
 import HomeScreen from './src/screens/HomeScreen';
 import EarningsScreen from './src/screens/EarningsScreen';
+import PayoutScreen from './src/screens/PayoutScreen';
 
 const Stack = createNativeStackNavigator();
 
 export type RootStackParamList = {
   Home: undefined;
   Earnings: undefined;
+  Payout: undefined;
 };
 
 export default function App() {
@@ -83,6 +85,7 @@ export default function App() {
               {(props) => <HomeScreen {...props} driverId={driverId!} driverName={driverName} />}
             </Stack.Screen>
             <Stack.Screen name="Earnings" component={EarningsScreen} />
+          <Stack.Screen name="Payout" component={PayoutScreen} />
           </Stack.Navigator>
         </NavigationContainer>
       </SafeAreaProvider>

@@ -638,6 +638,79 @@ app.get('/api/hiway/stats', (req, res) => {
 app.get('/api/hiway/driver/:id/history', (req, res) => {
   const history = [];
   for (const ride of rideshare.rides.values()) {
+
+// --- Driver Payouts ---
+const payoutsStore = new Map(); // driverId -> [{id, amount, method, status, requestedAt, paidAt}]
+const payoutMethodsStore = new Map(); // driverId -> [{id, type, label, details}]
+let payoutIdCounter = 1;
+
+app.get('/api/hiway/driver/:id/payouts', (req, res) => {
+  const driver = rideshare.drivers.get(req.params.id);
+  if (!driver) return res.status(404).json({ error: 'Driver not found' });
+  const payouts = payoutsStore.get(req.params.id) || [];
+  res.json(payouts.sort((a, b) => new Date(b.requestedAt) - new Date(a.requestedAt)));
+});
+
+app.get('/api/hiway/driver/:id/balance', (req, res) => {
+  const driver = rideshare.drivers.get(req.params.id);
+  if (!driver) return res.status(404).json({ error: 'Driver not found' });
+  const earnings = driver.earnings || 0;
+  const payouts = payoutsStore.get(req.params.id) || [];
+  const pendingPayouts = payouts.filter(p => p.status === 'pending').reduce((s, p) => s + p.amount, 0);
+  const paidOut = payouts.filter(p => p.status === 'paid').reduce((s, p) => s + p.amount, 0);
+  res.json({
+    totalEarnings: earnings,
+    paidOut,
+    pending: pendingPayouts,
+    available: earnings - paidOut - pendingPayouts,
+    currency: 'USD',
+  });
+});
+
+app.post('/api/hiway/driver/:id/payouts', (req, res) => {
+  const driver = rideshare.drivers.get(req.params.id);
+  if (!driver) return res.status(404).json({ error: 'Driver not found' });
+  const { amount, method } = req.body;
+  if (!amount || amount <= 0) return res.status(400).json({ error: 'Invalid amount' });
+  if (amount < 10) return res.status(400).json({ error: 'Minimum payout is 0' });
+
+  const balance = (driver.earnings || 0) - (payoutsStore.get(req.params.id) || []).filter(p => p.status !== 'cancelled').reduce((s, p) => s + p.amount, 0);
+  if (amount > balance) return res.status(400).json({ error: 'Insufficient balance' });
+
+  if (!payoutsStore.has(req.params.id)) payoutsStore.set(req.params.id, []);
+  const payout = {
+    id: 'payout_' + (payoutIdCounter++),
+    amount,
+    method: method || { type: 'stripe', label: 'Bank Transfer' },
+    status: 'pending',
+    requestedAt: new Date().toISOString(),
+    paidAt: null,
+    notes: '',
+  };
+  payoutsStore.get(req.params.id).push(payout);
+  res.status(201).json(payout);
+});
+
+app.get('/api/hiway/driver/:id/payout-methods', (req, res) => {
+  const methods = payoutMethodsStore.get(req.params.id) || [];
+  res.json(methods);
+});
+
+app.post('/api/hiway/driver/:id/payout-methods', (req, res) => {
+  const { type, label, details } = req.body;
+  if (!type || !label) return res.status(400).json({ error: 'type and label required' });
+  if (!payoutMethodsStore.has(req.params.id)) payoutMethodsStore.set(req.params.id, []);
+  const method = {
+    id: 'method_' + (payoutIdCounter++),
+    type: type || 'bank',
+    label,
+    details: details || {},
+    addedAt: new Date().toISOString(),
+  };
+  payoutMethodsStore.get(req.params.id).push(method);
+  res.status(201).json(method);
+});
+
     if (ride.driverId === req.params.id) history.push(ride);
   }
   res.json(history.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)).slice(0, 20));

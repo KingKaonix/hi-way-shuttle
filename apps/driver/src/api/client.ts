@@ -23,6 +23,12 @@ export const api = {
     getEarnings: (id: string) => request<any>(`/hiway/driver/${id}/earnings`),
     getActive: (id: string) => request<any>(`/hiway/driver/${id}/active`),
     getHistory: (id: string) => request<any[]>(`/hiway/driver/${id}/history`),
+    getBalance: (id: string) => request<any>(`/hiway/driver/${id}/balance`),
+    getPayouts: (id: string) => request<any[]>(`/hiway/driver/${id}/payouts`),
+    requestPayout: (id: string, data: { amount: number; method: any }) =>
+      request<any>(`/hiway/driver/${id}/payouts`, { method: 'POST', body: JSON.stringify(data) }),
+    getPayoutMethods: (id: string) => request<any[]>(`/hiway/driver/${id}/payout-methods`),
+
   },
   stats: () => request<any>('/hiway/stats'),
 };
