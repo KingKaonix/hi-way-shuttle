@@ -33,7 +33,7 @@ jobs:
           node-version: 20
 
       - name: Install dependencies
-        run: npm install
+        run: npm install --legacy-peer-deps
 
       - name: Prebuild native Android project
         run: ./node_modules/.bin/expo prebuild --clean --no-install

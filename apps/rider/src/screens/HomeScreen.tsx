@@ -5,6 +5,7 @@ import {
   Dimensions, Animated,
 } from 'react-native';
 import { Map, Camera, Marker, UserLocation } from '@maplibre/maplibre-react-native';
+import type { CameraRef } from '@maplibre/maplibre-react-native';
 import * as Location from 'expo-location';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -13,8 +14,6 @@ import { RootStackParamList } from '../../App';
 
 const { width, height } = Dimensions.get('window');
 const ASPECT_RATIO = width / height;
-
-// Free OpenStreetMap tile style via OpenFreeMap
 const MAP_STYLE = 'https://tiles.openfreemap.org/styles/liberty';
 
 type Props = {
@@ -33,6 +32,7 @@ const PLACES = [
 ];
 
 export default function HomeScreen({ navigation, riderId, riderName }: Props) {
+  const cameraRef = useRef<CameraRef>(null);
   const [location, setLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [dropoff, setDropoff] = useState<{ lat: number; lng: number; name: string } | null>(null);
   const [fare, setFare] = useState<any>(null);
@@ -40,14 +40,7 @@ export default function HomeScreen({ navigation, riderId, riderName }: Props) {
   const [searchResults, setSearchResults] = useState<typeof PLACES>([]);
   const [booking, setBooking] = useState(false);
   const [subscription, setSubscription] = useState<any>(null);
-  const [camera, setCamera] = useState({
-    centerCoordinate: [-74.006, 40.7128] as [number, number],
-    zoomLevel: 12,
-    bounds: null as any,
-    padding: null as any,
-  });
   const sheetAnim = useRef(new Animated.Value(0)).current;
-  const mapReady = useRef(false);
 
   useEffect(() => {
     (async () => {
@@ -59,11 +52,11 @@ export default function HomeScreen({ navigation, riderId, riderName }: Props) {
       const loc = await Location.getCurrentPositionAsync({});
       const coords = { lat: loc.coords.latitude, lng: loc.coords.longitude };
       setLocation(coords);
-      setCamera(prev => ({
-        ...prev,
-        centerCoordinate: [coords.lng, coords.lat],
+      cameraRef.current?.flyTo({
+        center: [coords.lng, coords.lat],
         zoomLevel: 14,
-      }));
+        duration: 1000,
+      });
     })();
 
     // Load subscription
@@ -85,21 +78,16 @@ export default function HomeScreen({ navigation, riderId, riderName }: Props) {
     setSearchResults([]);
 
     if (location) {
-      // Fit camera to show both pickup and dropoff
       const minLat = Math.min(location.lat, place.lat);
       const maxLat = Math.max(location.lat, place.lat);
       const minLng = Math.min(location.lng, place.lng);
       const maxLng = Math.max(location.lng, place.lng);
 
-      setCamera({
-        centerCoordinate: [(minLng + maxLng) / 2, (minLat + maxLat) / 2],
-        zoomLevel: 12,
-        bounds: {
-          ne: [maxLng + 0.01, maxLat + 0.01] as [number, number],
-          sw: [minLng - 0.01, minLat - 0.01] as [number, number],
-        },
-        padding: { top: 100, right: 50, bottom: 350, left: 50 },
-      });
+      cameraRef.current?.fitBounds(
+        [minLng - 0.01, minLat - 0.01, maxLng + 0.01, maxLat + 0.01] as any,
+        { top: 100, right: 50, bottom: 350, left: 50 },
+        500,
+      );
 
       // Get fare estimate
       try {
@@ -130,28 +118,20 @@ export default function HomeScreen({ navigation, riderId, riderName }: Props) {
 
   return (
     <View style={{ flex: 1, backgroundColor: '#0a1628' }}>
-      {/* Map */}
       <Map
         style={{ flex: 1 }}
-        styleURL={MAP_STYLE}
+        mapStyle={MAP_STYLE}
+        logo
         logoPosition={{ bottom: 8, left: 8 }}
-        compassEnabled
       >
         <Camera
-          defaultSettings={{
-            centerCoordinate: [-74.006, 40.7128],
+          ref={cameraRef}
+          initialViewState={{
+            center: [-74.006, 40.7128],
             zoomLevel: 12,
           }}
-          centerCoordinate={camera.centerCoordinate}
-          zoomLevel={camera.zoomLevel}
-          bounds={camera.bounds}
-          padding={camera.padding}
-          animationDuration={500}
-          animationMode="flyTo"
         />
-
-        <UserLocation showsUserHeadingIndicator visible />
-
+        <UserLocation visible showsUserHeadingIndicator />
         {dropoff && (
           <Marker id="dropoff" lngLat={[dropoff.lng, dropoff.lat]}>
             <View style={styles.markerPin}>
@@ -191,8 +171,6 @@ export default function HomeScreen({ navigation, riderId, riderName }: Props) {
         <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
           <ScrollView keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
             <View style={styles.handle} />
-
-            {/* Search */}
             <View style={styles.searchContainer}>
               <View style={styles.locationDot} />
               <TextInput
@@ -224,7 +202,6 @@ export default function HomeScreen({ navigation, riderId, riderName }: Props) {
               </View>
             )}
 
-            {/* Fare estimate */}
             {fare && (
               <View style={styles.fareCard}>
                 <View style={styles.fareRow}>
@@ -273,7 +250,6 @@ export default function HomeScreen({ navigation, riderId, riderName }: Props) {
               </View>
             )}
 
-            {/* Features */}
             <View style={styles.features}>
               {[
                 '✦ No surge pricing',
@@ -295,19 +271,11 @@ export default function HomeScreen({ navigation, riderId, riderName }: Props) {
 
 const styles = StyleSheet.create({
   topBar: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    zIndex: 10,
-    paddingHorizontal: 16,
-    paddingVertical: 8,
+    position: 'absolute', top: 0, left: 0, right: 0, zIndex: 10,
+    paddingHorizontal: 16, paddingVertical: 8,
     backgroundColor: 'rgba(10,22,40,0.92)',
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(30,58,95,0.5)',
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    borderBottomWidth: 1, borderBottomColor: 'rgba(30,58,95,0.5)',
+    flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
   },
   logoContainer: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   logoText: { color: 'white', fontSize: 20, fontWeight: '800', letterSpacing: -0.5 },
@@ -319,77 +287,49 @@ const styles = StyleSheet.create({
   },
   subBadgeText: { color: '#c9952b', fontSize: 11, fontWeight: '600' },
   bottomSheet: {
-    position: 'absolute',
-    bottom: 0, left: 0, right: 0,
+    position: 'absolute', bottom: 0, left: 0, right: 0,
     backgroundColor: '#fff',
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    paddingHorizontal: 20,
-    paddingBottom: 30,
+    borderTopLeftRadius: 20, borderTopRightRadius: 20,
+    paddingHorizontal: 20, paddingBottom: 30,
     maxHeight: height * 0.5,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: -4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 24,
-    elevation: 10,
+    shadowColor: '#000', shadowOffset: { width: 0, height: -4 },
+    shadowOpacity: 0.1, shadowRadius: 24, elevation: 10,
   },
   handle: {
     width: 36, height: 4,
-    backgroundColor: '#d1d5db',
-    borderRadius: 2,
-    alignSelf: 'center',
-    marginTop: 8,
-    marginBottom: 12,
+    backgroundColor: '#d1d5db', borderRadius: 2,
+    alignSelf: 'center', marginTop: 8, marginBottom: 12,
   },
   searchContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#f1f5f9',
-    borderRadius: 14,
-    padding: 14,
-    marginBottom: 8,
+    flexDirection: 'row', alignItems: 'center',
+    backgroundColor: '#f1f5f9', borderRadius: 14,
+    padding: 14, marginBottom: 8,
   },
   locationDot: {
-    width: 10, height: 10,
-    borderRadius: 5,
-    backgroundColor: '#ef4444',
-    marginRight: 10,
+    width: 10, height: 10, borderRadius: 5,
+    backgroundColor: '#ef4444', marginRight: 10,
   },
   searchInput: {
-    flex: 1,
-    fontSize: 15,
-    color: '#1a1a2e',
+    flex: 1, fontSize: 15, color: '#1a1a2e',
     fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
   },
   searchResults: {
-    backgroundColor: '#fff',
-    borderRadius: 14,
-    borderWidth: 1,
-    borderColor: '#e2e8f0',
-    marginBottom: 8,
+    backgroundColor: '#fff', borderRadius: 14,
+    borderWidth: 1, borderColor: '#e2e8f0', marginBottom: 8,
   },
   searchResult: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 12,
-    gap: 10,
+    flexDirection: 'row', alignItems: 'center', padding: 12, gap: 10,
   },
   searchResultIcon: {
-    width: 36, height: 36,
-    borderRadius: 10,
+    width: 36, height: 36, borderRadius: 10,
     backgroundColor: '#f1f5f9',
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: 'center', alignItems: 'center',
   },
   searchResultName: { fontWeight: '600', color: '#0a1628', fontSize: 14 },
   searchResultAddr: { fontSize: 12, color: '#94a3b8' },
   fareCard: {
-    backgroundColor: '#f8f9fc',
-    borderRadius: 14,
-    padding: 16,
-    borderWidth: 1,
-    borderColor: '#e2e8f0',
-    marginBottom: 12,
+    backgroundColor: '#f8f9fc', borderRadius: 14,
+    padding: 16, borderWidth: 1, borderColor: '#e2e8f0', marginBottom: 12,
   },
   fareRow: { flexDirection: 'row', justifyContent: 'space-between' },
   fareLabel: { fontSize: 13, color: '#64748b' },
@@ -397,59 +337,30 @@ const styles = StyleSheet.create({
   fareDetails: { alignItems: 'flex-end' },
   fareDetail: { fontSize: 13, color: '#64748b' },
   discountBadge: {
-    marginTop: 8,
-    paddingTop: 8,
-    borderTopWidth: 1,
-    borderTopColor: '#e2e8f0',
+    marginTop: 8, paddingTop: 8,
+    borderTopWidth: 1, borderTopColor: '#e2e8f0',
   },
   discountText: { fontSize: 12, color: '#10b981', fontWeight: '600' },
   fareBreakdown: { marginTop: 8 },
   breakdownText: { fontSize: 11, color: '#94a3b8' },
   requestBtn: {
-    backgroundColor: '#c9952b',
-    padding: 16,
-    borderRadius: 14,
-    alignItems: 'center',
-    marginTop: 12,
-    shadowColor: '#c9952b',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 16,
-    elevation: 4,
+    backgroundColor: '#c9952b', padding: 16, borderRadius: 14,
+    alignItems: 'center', marginTop: 12,
+    shadowColor: '#c9952b', shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3, shadowRadius: 16, elevation: 4,
   },
   requestBtnDisabled: { opacity: 0.5 },
   requestBtnText: { color: '#fff', fontSize: 16, fontWeight: '700' },
-  features: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 6,
-    marginTop: 4,
-  },
-  featurePill: {
-    paddingHorizontal: 10, paddingVertical: 4,
-    backgroundColor: '#f1f5f9',
-    borderRadius: 20,
-  },
+  features: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 4 },
+  featurePill: { paddingHorizontal: 10, paddingVertical: 4, backgroundColor: '#f1f5f9', borderRadius: 20 },
   featureText: { fontSize: 11, color: '#475569' },
   markerPin: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
+    width: 28, height: 28, borderRadius: 14,
     backgroundColor: '#ef4444',
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 3,
-    borderColor: '#fff',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
-    elevation: 4,
+    justifyContent: 'center', alignItems: 'center',
+    borderWidth: 3, borderColor: '#fff',
+    shadowColor: '#000', shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3, shadowRadius: 4, elevation: 4,
   },
-  markerInner: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: '#fff',
-  },
+  markerInner: { width: 8, height: 8, borderRadius: 4, backgroundColor: '#fff' },
 });

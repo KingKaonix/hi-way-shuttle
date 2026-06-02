@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 import {
   View, Text, TouchableOpacity, StyleSheet, Alert, Vibration,
-  ActivityIndicator, Animated, Dimensions, ScrollView,
+  ActivityIndicator, Animated, Dimensions,
 } from 'react-native';
 import { Map, Camera, UserLocation } from '@maplibre/maplibre-react-native';
+import type { CameraRef } from '@maplibre/maplibre-react-native';
 import * as Location from 'expo-location';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -13,7 +14,6 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { RootStackParamList } from '../../App';
 
 const { width, height } = Dimensions.get('window');
-const ASPECT_RATIO = width / height;
 const MAP_STYLE = 'https://tiles.openfreemap.org/styles/liberty';
 
 type Props = {
@@ -23,6 +23,7 @@ type Props = {
 };
 
 export default function HomeScreen({ navigation, driverId, driverName }: Props) {
+  const cameraRef = useRef<CameraRef>(null);
   const [online, setOnline] = useState(false);
   const [location, setLocation] = useState<{ lat: number; lng: number }>({ lat: 40.7128, lng: -74.006 });
   const [showRequest, setShowRequest] = useState(false);
@@ -32,10 +33,6 @@ export default function HomeScreen({ navigation, driverId, driverName }: Props) 
   const [rating, setRating] = useState(5.0);
   const [requestTimer, setRequestTimer] = useState(15);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const [camera, setCamera] = useState({
-    centerCoordinate: [-74.006, 40.7128] as [number, number],
-    zoomLevel: 14,
-  });
 
   useEffect(() => {
     (async () => {
@@ -45,15 +42,15 @@ export default function HomeScreen({ navigation, driverId, driverName }: Props) 
         return;
       }
 
-      // Start tracking location
       await Location.watchPositionAsync(
         { accuracy: Location.Accuracy.High, timeInterval: 5000, distanceInterval: 10 },
         (pos) => {
           const coords = { lat: pos.coords.latitude, lng: pos.coords.longitude };
           setLocation(coords);
-          setCamera({
-            centerCoordinate: [pos.coords.longitude, pos.coords.latitude],
-            zoomLevel: 14,
+          cameraRef.current?.flyTo({
+            center: [pos.coords.longitude, pos.coords.latitude],
+            zoomLevel: 15,
+            duration: 500,
           });
           if (online) {
             api.driver.setStatus(driverId, { online: true, ...coords }).catch(() => {});
@@ -61,7 +58,6 @@ export default function HomeScreen({ navigation, driverId, driverName }: Props) 
         }
       );
 
-      // Load earnings
       loadEarnings();
     })();
   }, []);
@@ -81,14 +77,8 @@ export default function HomeScreen({ navigation, driverId, driverName }: Props) 
     try {
       await api.driver.setStatus(driverId, { online: newState, ...location });
     } catch {}
-
     if (newState) {
-      // Simulate ride request for demo
-      setTimeout(() => {
-        if (newState) {
-          simulateRideRequest();
-        }
-      }, 5000);
+      setTimeout(() => { if (newState) simulateRideRequest(); }, 5000);
     } else {
       if (timerRef.current) clearInterval(timerRef.current);
       setShowRequest(false);
@@ -99,14 +89,9 @@ export default function HomeScreen({ navigation, driverId, driverName }: Props) 
     setShowRequest(true);
     setRequestTimer(15);
     Vibration.vibrate([200, 100, 200]);
-
     timerRef.current = setInterval(() => {
       setRequestTimer(prev => {
-        if (prev <= 1) {
-          clearInterval(timerRef.current!);
-          declineRide();
-          return 0;
-        }
+        if (prev <= 1) { clearInterval(timerRef.current!); declineRide(); return 0; }
         return prev - 1;
       });
     }, 1000);
@@ -137,38 +122,21 @@ export default function HomeScreen({ navigation, driverId, driverName }: Props) 
     Alert.alert(`Trip Complete!`, `You earned $${activeRide.fare.toFixed(2)}`);
   };
 
-  const cancelRide = () => {
-    setActiveRide(null);
-    Alert.alert('Ride Cancelled');
-  };
+  const cancelRide = () => { setActiveRide(null); Alert.alert('Ride Cancelled'); };
 
   return (
     <View style={{ flex: 1, backgroundColor: '#0a1628' }}>
-      {/* Map */}
-      <Map
-        style={{ flex: 1 }}
-        styleURL={MAP_STYLE}
-        logoPosition={{ bottom: 8, left: 8 }}
-      >
+      <Map style={{ flex: 1 }} mapStyle={MAP_STYLE} logo logoPosition={{ bottom: 8, left: 8 }}>
         <Camera
-          defaultSettings={{
-            centerCoordinate: [-74.006, 40.7128],
-            zoomLevel: 14,
-          }}
-          centerCoordinate={camera.centerCoordinate}
-          zoomLevel={camera.zoomLevel}
-          animationDuration={500}
-          animationMode="flyTo"
+          ref={cameraRef}
+          initialViewState={{ center: [-74.006, 40.7128], zoomLevel: 14 }}
         />
         <UserLocation visible showsUserHeadingIndicator />
       </Map>
 
-      {/* Top bar */}
       <SafeAreaView style={styles.topBar}>
         <View style={styles.driverInfo}>
-          <View style={styles.avatar}>
-            <Text style={styles.avatarText}>{driverName.charAt(0)}</Text>
-          </View>
+          <View style={styles.avatar}><Text style={styles.avatarText}>{driverName.charAt(0)}</Text></View>
           <View>
             <Text style={styles.driverName}>{driverName}</Text>
             <Text style={styles.statusText}>{online ? 'Online' : 'Offline'}</Text>
@@ -182,7 +150,6 @@ export default function HomeScreen({ navigation, driverId, driverName }: Props) 
         </TouchableOpacity>
       </SafeAreaView>
 
-      {/* Ride request card */}
       {showRequest && (
         <View style={styles.requestCard}>
           <View style={styles.requestHeader}>
@@ -212,7 +179,6 @@ export default function HomeScreen({ navigation, driverId, driverName }: Props) 
         </View>
       )}
 
-      {/* Active ride */}
       {activeRide && (
         <View style={styles.activeCard}>
           <View style={styles.activeHeader}>
@@ -238,7 +204,6 @@ export default function HomeScreen({ navigation, driverId, driverName }: Props) 
         </View>
       )}
 
-      {/* Stats (when idle) */}
       {!activeRide && !showRequest && (
         <View style={styles.statsCard}>
           <View style={styles.statsRow}>
@@ -255,10 +220,7 @@ export default function HomeScreen({ navigation, driverId, driverName }: Props) 
               <Text style={styles.statValue}>{rating.toFixed(1)}</Text>
             </View>
           </View>
-          <TouchableOpacity
-            style={styles.viewEarnings}
-            onPress={() => navigation.navigate('Earnings')}
-          >
+          <TouchableOpacity style={styles.viewEarnings} onPress={() => navigation.navigate('Earnings')}>
             <Text style={styles.viewEarningsText}>View Details</Text>
             <Ionicons name="chevron-forward" size={16} color="#c9952b" />
           </TouchableOpacity>
@@ -276,10 +238,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1, borderBottomColor: 'rgba(30,58,95,0.5)',
   },
   driverInfo: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  avatar: {
-    width: 40, height: 40, borderRadius: 12,
-    backgroundColor: '#c9952b', justifyContent: 'center', alignItems: 'center',
-  },
+  avatar: { width: 40, height: 40, borderRadius: 12, backgroundColor: '#c9952b', justifyContent: 'center', alignItems: 'center' },
   avatarText: { color: '#fff', fontSize: 16, fontWeight: '800' },
   driverName: { color: '#fff', fontWeight: '700', fontSize: 15 },
   statusText: { color: '#64748b', fontSize: 11 },
@@ -291,8 +250,7 @@ const styles = StyleSheet.create({
     position: 'absolute', bottom: 100, left: 16, right: 16, zIndex: 10,
     backgroundColor: '#1e293b', borderRadius: 16, padding: 20,
     borderWidth: 1, borderColor: 'rgba(201,149,43,0.3)',
-    shadowColor: '#000', shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.3, shadowRadius: 24, elevation: 10,
+    shadowColor: '#000', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.3, shadowRadius: 24, elevation: 10,
   },
   requestHeader: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 12 },
   requestTitle: { color: '#64748b', fontSize: 12, fontWeight: '600' },
@@ -310,8 +268,7 @@ const styles = StyleSheet.create({
   activeCard: {
     position: 'absolute', bottom: 0, left: 0, right: 0, zIndex: 10,
     backgroundColor: '#1e293b', borderTopLeftRadius: 20, borderTopRightRadius: 20,
-    padding: 20, shadowColor: '#000', shadowOffset: { width: 0, height: -4 },
-    shadowOpacity: 0.3, shadowRadius: 24, elevation: 10,
+    padding: 20, shadowColor: '#000', shadowOffset: { width: 0, height: -4 }, shadowOpacity: 0.3, shadowRadius: 24, elevation: 10,
   },
   activeHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: 12 },
   activeDot: { width: 10, height: 10, borderRadius: 5, backgroundColor: '#10b981', marginRight: 8 },
@@ -329,8 +286,7 @@ const styles = StyleSheet.create({
   statsCard: {
     position: 'absolute', bottom: 0, left: 0, right: 0, zIndex: 10,
     backgroundColor: '#1e293b', borderTopLeftRadius: 20, borderTopRightRadius: 20,
-    padding: 20, shadowColor: '#000', shadowOffset: { width: 0, height: -4 },
-    shadowOpacity: 0.3, shadowRadius: 24, elevation: 10,
+    padding: 20, shadowColor: '#000', shadowOffset: { width: 0, height: -4 }, shadowOpacity: 0.3, shadowRadius: 24, elevation: 10,
   },
   statsRow: { flexDirection: 'row' },
   stat: { flex: 1, alignItems: 'center' },
