@@ -186,7 +186,7 @@ export default function HomeScreen({ navigation, driverId, driverName }: Props) 
         {/* Route line */}
         {routeGeo && (
           <ShapeSource id="routeSource" shape={routeGeo}>
-            <Layer
+            <LineLayer
               id="routeLine"
               style={{
                 lineColor: '#38bdf8',
