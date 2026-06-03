@@ -48,7 +48,8 @@
             "kotlinVersion": "1.9.25"
           }
         }
-      ]
+      ],
+      "@maplibre/maplibre-react-native"
     ],
     "extra": {
       "apiUrl": "https://hi-way-shuttle.fly.dev"
