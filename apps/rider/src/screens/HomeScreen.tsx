@@ -52,11 +52,7 @@ export default function HomeScreen({ navigation, riderId, riderName }: Props) {
       const loc = await Location.getCurrentPositionAsync({});
       const coords = { lat: loc.coords.latitude, lng: loc.coords.longitude };
       setLocation(coords);
-      cameraRef.current?.flyTo({
-        center: [coords.lng, coords.lat],
-        zoomLevel: 14,
-        duration: 1000,
-      });
+      cameraRef.current?.flyTo([coords.lng, coords.lat], 1000);
     })();
 
     // Load subscription
@@ -84,8 +80,9 @@ export default function HomeScreen({ navigation, riderId, riderName }: Props) {
       const maxLng = Math.max(location.lng, place.lng);
 
       cameraRef.current?.fitBounds(
-        [minLng - 0.01, minLat - 0.01, maxLng + 0.01, maxLat + 0.01] as any,
-        { top: 100, right: 50, bottom: 350, left: 50 },
+        [maxLng + 0.01, maxLat + 0.01],
+        [minLng - 0.01, minLat - 0.01],
+        [100, 50, 350, 50],
         500,
       );
 

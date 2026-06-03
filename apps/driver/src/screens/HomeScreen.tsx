@@ -57,8 +57,9 @@ export default function HomeScreen({ navigation, driverId, driverName }: Props) 
       const lngs = coords.map(c => c[0]);
       const lats = coords.map(c => c[1]);
       cameraRef.current?.fitBounds(
-        [Math.min(...lngs) - 0.005, Math.min(...lats) - 0.005, Math.max(...lngs) + 0.005, Math.max(...lats) + 0.005] as any,
-        { top: 120, right: 50, bottom: 120, left: 50 },
+        [Math.max(...lngs) + 0.005, Math.max(...lats) + 0.005],
+        [Math.min(...lngs) - 0.005, Math.min(...lats) - 0.005],
+        [120, 50, 120, 50],
         500,
       );
     }
@@ -84,7 +85,7 @@ export default function HomeScreen({ navigation, driverId, driverName }: Props) 
         (pos) => {
           const coords = { lat: pos.coords.latitude, lng: pos.coords.longitude };
           setLocation(coords);
-          cameraRef.current?.flyTo({ center: [pos.coords.longitude, pos.coords.latitude], zoomLevel: 15, duration: 500 });
+          cameraRef.current?.flyTo([pos.coords.longitude, pos.coords.latitude], 500);
           if (online) {
             api.driver.setStatus(driverId, { online: true, ...coords }).catch(() => {});
           }

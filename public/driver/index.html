@@ -316,7 +316,7 @@
               <span style="width:8px;height:8px;border-radius:50%;background:#10b981;display:inline-block;animation:pulseRing 2s infinite;"></span>
               <span id="active-status-label">En route to pickup</span>
             </span>
-            <span style="font-size:13px;color:#64748b;$<span id="active-earnings">0</span></span>
+            <span style="font-size:13px;color:#64748b;">$<span id="active-earnings">0</span></span>
           </div>
 
           <div class="route-info" style="margin-bottom:10px;">
@@ -369,11 +369,15 @@
 
     // --- Init ---
     document.addEventListener('DOMContentLoaded', async () => {
-      await identifyDriver();
-      initMap();
-      connectWebSocket();
-      startLocationTracking();
-      loadEarnings();
+      try {
+        await identifyDriver();
+        initMap();
+        connectWebSocket();
+        startLocationTracking();
+        loadEarnings();
+      } catch(e) {
+        console.warn('Init error:', e);
+      }
     });
 
     async function identifyDriver() {
@@ -485,8 +489,12 @@
           }));
         };
         STATE.ws.onmessage = (event) => {
-          const msg = JSON.parse(event.data);
-          handleWsMessage(msg);
+          try {
+            const msg = JSON.parse(event.data);
+            handleWsMessage(msg);
+          } catch(e) {
+            console.warn('WS message error:', e);
+          }
         };
         STATE.ws.onclose = () => setTimeout(connectWebSocket, 3000);
         STATE.ws.onerror = () => {};
