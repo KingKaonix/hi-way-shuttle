@@ -4,7 +4,7 @@ import {
   ActivityIndicator, KeyboardAvoidingView, Platform, ScrollView,
   Dimensions, Animated,
 } from 'react-native';
-import { MapView, Camera, Marker, UserLocation } from '@maplibre/maplibre-react-native';
+import { MapView, Camera, MarkerView, UserLocation } from '@maplibre/maplibre-react-native';
 import type { CameraRef } from '@maplibre/maplibre-react-native';
 import * as Location from 'expo-location';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -129,11 +129,11 @@ export default function HomeScreen({ navigation, riderId, riderName }: Props) {
         />
         {locationPermission && <UserLocation visible showsUserHeadingIndicator />}
         {dropoff && (
-          <Marker id="dropoff" lngLat={[dropoff.lng, dropoff.lat]}>
+          <MarkerView id="dropoff" coordinate={[dropoff.lng, dropoff.lat]}>
             <View style={styles.markerPin}>
               <View style={styles.markerInner} />
             </View>
-          </Marker>
+          </MarkerView>
         )}
       </MapView>
 

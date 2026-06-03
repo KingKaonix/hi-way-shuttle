@@ -3,7 +3,7 @@ import {
   View, Text, TouchableOpacity, StyleSheet, Alert, Vibration,
   ActivityIndicator, Animated, Dimensions,
 } from 'react-native';
-import { MapView, Camera, UserLocation, GeoJSONSource, Layer } from '@maplibre/maplibre-react-native';
+import { MapView, Camera, UserLocation, ShapeSource, LineLayer } from '@maplibre/maplibre-react-native';
 import type { CameraRef } from '@maplibre/maplibre-react-native';
 import * as Location from 'expo-location';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -181,7 +181,7 @@ export default function HomeScreen({ navigation, driverId, driverName }: Props) 
 
         {/* Route line */}
         {routeGeo && (
-          <GeoJSONSource id="routeSource" geoJSON={routeGeo}>
+          <ShapeSource id="routeSource" shape={routeGeo}>
             <Layer
               id="routeLine"
               style={{
@@ -192,7 +192,7 @@ export default function HomeScreen({ navigation, driverId, driverName }: Props) 
                 lineOpacity: 0.85,
               }}
             />
-          </GeoJSONSource>
+          </ShapeSource>
         )}
       </MapView>
 
