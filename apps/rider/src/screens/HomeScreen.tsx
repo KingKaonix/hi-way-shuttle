@@ -120,12 +120,12 @@ export default function HomeScreen({ navigation, riderId, riderName }: Props) {
       <Map
         style={{ flex: 1 }}
         mapStyle={MAP_STYLE}
-        logoEnabled
+        logo
         logoPosition={{ bottom: 8, left: 8 }}
       >
         <Camera
           ref={cameraRef}
-          defaultSettings={{ centerCoordinate: [-74.006, 40.7128], zoomLevel: 12 }}
+          initialViewState={{ center: [-74.006, 40.7128], zoomLevel: 12 }}
         />
         {locationPermission && <UserLocation visible showsUserHeadingIndicator />}
         {dropoff && (

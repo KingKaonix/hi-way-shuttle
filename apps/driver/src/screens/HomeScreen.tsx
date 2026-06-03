@@ -172,10 +172,10 @@ export default function HomeScreen({ navigation, driverId, driverName }: Props) 
 
   return (
     <View style={{ flex: 1, backgroundColor: '#0a1628' }}>
-      <Map style={{ flex: 1 }} mapStyle={MAP_STYLE} logoEnabled logoPosition={{ bottom: 8, left: 8 }}>
+      <Map style={{ flex: 1 }} mapStyle={MAP_STYLE} logo logoPosition={{ bottom: 8, left: 8 }}>
         <Camera
           ref={cameraRef}
-          defaultSettings={{ centerCoordinate: [-74.006, 40.7128], zoomLevel: 14 }}
+          initialViewState={{ center: [-74.006, 40.7128], zoomLevel: 14 }}
         />
         {locationPermission && <UserLocation visible showsUserHeadingIndicator />}
 
