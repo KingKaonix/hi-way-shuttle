@@ -41,6 +41,7 @@ export default function HomeScreen({ navigation, driverId, driverName }: Props) 
   const [requestTimer, setRequestTimer] = useState(15);
   const [routeGeo, setRouteGeo] = useState<any>(null);
   const [routeETA, setRouteETA] = useState<{ duration: number; distance: number } | null>(null);
+  const [locationPermission, setLocationPermission] = useState(false);
   const [loading, setLoading] = useState(false);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
@@ -79,6 +80,7 @@ export default function HomeScreen({ navigation, driverId, driverName }: Props) 
         Alert.alert('Permission needed', 'Location access is required for ride matching.');
         return;
       }
+      setLocationPermission(true);
 
       await Location.watchPositionAsync(
         { accuracy: Location.Accuracy.High, timeInterval: 5000, distanceInterval: 10 },
@@ -170,12 +172,12 @@ export default function HomeScreen({ navigation, driverId, driverName }: Props) 
 
   return (
     <View style={{ flex: 1, backgroundColor: '#0a1628' }}>
-      <Map style={{ flex: 1 }} mapStyle={MAP_STYLE} logo logoPosition={{ bottom: 8, left: 8 }}>
+      <Map style={{ flex: 1 }} mapStyle={MAP_STYLE} logoEnabled logoPosition={{ bottom: 8, left: 8 }}>
         <Camera
           ref={cameraRef}
-          initialViewState={{ center: [-74.006, 40.7128], zoomLevel: 14 }}
+          defaultSettings={{ centerCoordinate: [-74.006, 40.7128], zoomLevel: 14 }}
         />
-        <UserLocation visible showsUserHeadingIndicator />
+        {locationPermission && <UserLocation visible showsUserHeadingIndicator />}
 
         {/* Route line */}
         {routeGeo && (
