@@ -1,4 +1,4 @@
-import { Linking, Alert, Platform } from 'react-native';
+import { Linking, Alert } from 'react-native';
 
 const OSRM_BASE = 'https://router.project-osrm.org';
 const MAP_STYLE = 'https://tiles.openfreemap.org/styles/liberty';
@@ -102,8 +102,8 @@ export function routeToGeoJSON(coordinates: [number, number][]) {
 }
 
 /**
- * Open turn-by-turn directions in an external navigation app.
- * Tries Google Maps first, falls back to OpenStreetMap directions.
+ * Open turn-by-turn directions using OpenStreetMap (open source).
+ * If Organic Maps app is installed, it will handle the OSM link natively.
  */
 export async function openDirections(
   destination: { lat: number; lng: number; name?: string },
@@ -112,29 +112,14 @@ export async function openDirections(
   const destParam = `${destination.lat},${destination.lng}`;
   const originParam = origin ? `${origin.lat},${origin.lng}` : undefined;
 
-  // Try Google Maps
-  const googleUrl = originParam
-    ? `https://www.google.com/maps/dir/?api=1&origin=${originParam}&destination=${destParam}&travelmode=driving`
-    : `https://www.google.com/maps/dir/?api=1&destination=${destParam}&travelmode=driving`;
-
-  // OSM fallback
+  // OpenStreetMap directions — fully open source
   const osmUrl = originParam
     ? `https://www.openstreetmap.org/directions?from=${originParam}&to=${destParam}&engine=fossgis_osrm_car`
     : `https://www.openstreetmap.org/directions?to=${destParam}&engine=fossgis_osrm_car`;
 
   try {
-    const canOpenGoogle = await Linking.canOpenURL('https://www.google.com/maps');
-    if (canOpenGoogle || Platform.OS === 'android') {
-      await Linking.openURL(googleUrl);
-    } else {
-      await Linking.openURL(osmUrl);
-    }
+    await Linking.openURL(osmUrl);
   } catch {
-    // Fallback: try OSM directly
-    try {
-      await Linking.openURL(osmUrl);
-    } catch {
-      Alert.alert('Navigation', `Navigate to ${destination.name || destParam}`);
-    }
+    Alert.alert('Navigate', `Navigate to ${destination.name || destParam}`);
   }
 }
