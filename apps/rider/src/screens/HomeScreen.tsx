@@ -150,7 +150,21 @@ export default function HomeScreen({ navigation, riderId, riderName }: Props) {
         )}
       </SafeAreaView>
 
-      {/* Bottom sheet */}
+      {/* Fixed search bar — always visible */}
+      <View style={styles.fixedSearchBar}>
+        <View style={styles.searchContainer}>
+          <View style={styles.locationDot} />
+          <TextInput
+            style={styles.searchInput}
+            placeholder="Where to?"
+            placeholderTextColor="#94a3b8"
+            value={searchQuery}
+            onChangeText={searchPlaces}
+          />
+        </View>
+      </View>
+
+      {/* Animated results panel */}
       <Animated.View
         style={[
           styles.bottomSheet,
@@ -158,7 +172,7 @@ export default function HomeScreen({ navigation, riderId, riderName }: Props) {
             transform: [{
               translateY: sheetAnim.interpolate({
                 inputRange: [0, 1],
-                outputRange: [300, 0],
+                outputRange: [130, 0],
               }),
             }],
           },
@@ -167,16 +181,6 @@ export default function HomeScreen({ navigation, riderId, riderName }: Props) {
         <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
           <ScrollView keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
             <View style={styles.handle} />
-            <View style={styles.searchContainer}>
-              <View style={styles.locationDot} />
-              <TextInput
-                style={styles.searchInput}
-                placeholder="Where to?"
-                placeholderTextColor="#94a3b8"
-                value={searchQuery}
-                onChangeText={searchPlaces}
-              />
-            </View>
 
             {searchResults.length > 0 && (
               <View style={styles.searchResults}>
@@ -282,8 +286,16 @@ const styles = StyleSheet.create({
     borderWidth: 1, borderColor: 'rgba(201,149,43,0.2)',
   },
   subBadgeText: { color: '#c9952b', fontSize: 11, fontWeight: '600' },
+  fixedSearchBar: {
+    position: 'absolute', bottom: 0, left: 0, right: 0, zIndex: 20,
+    paddingHorizontal: 20, paddingBottom: 34,
+    backgroundColor: '#fff',
+    borderTopLeftRadius: 20, borderTopRightRadius: 20,
+    shadowColor: '#000', shadowOffset: { width: 0, height: -4 },
+    shadowOpacity: 0.1, shadowRadius: 24, elevation: 10,
+  },
   bottomSheet: {
-    position: 'absolute', bottom: 0, left: 0, right: 0,
+    position: 'absolute', bottom: 80, left: 0, right: 0,
     backgroundColor: '#fff',
     borderTopLeftRadius: 20, borderTopRightRadius: 20,
     paddingHorizontal: 20, paddingBottom: 30,

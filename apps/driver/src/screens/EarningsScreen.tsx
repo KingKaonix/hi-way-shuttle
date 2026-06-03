@@ -61,12 +61,11 @@ export default function EarningsScreen({ navigation }: Props) {
             <Text style={styles.payoutBtnText}>Payouts</Text>
             <Ionicons name="chevron-forward" size={16} color="#c9952b" />
           </TouchableOpacity>
-
-          </View>
           <View style={styles.summaryStat}>
             <Text style={styles.summaryStatValue}>{rating.toFixed(1)}</Text>
             <Text style={styles.summaryStatLabel}>Rating</Text>
           </View>
+        </View>
         </View>
 
       <FlatList

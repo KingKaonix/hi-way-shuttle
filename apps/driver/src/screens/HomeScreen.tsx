@@ -44,6 +44,10 @@ export default function HomeScreen({ navigation, driverId, driverName }: Props) 
   const [locationPermission, setLocationPermission] = useState(false);
   const [loading, setLoading] = useState(false);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const onlineRef = useRef(online);
+  onlineRef.current = online;
+  const activeRideRef = useRef(activeRide);
+  activeRideRef.current = activeRide;
 
   // Fetch route when ride is accepted or when moving
   const loadRoute = useCallback(async (from: { lat: number; lng: number }, to: { lat: number; lng: number }) => {
@@ -88,11 +92,11 @@ export default function HomeScreen({ navigation, driverId, driverName }: Props) 
           const coords = { lat: pos.coords.latitude, lng: pos.coords.longitude };
           setLocation(coords);
           cameraRef.current?.flyTo([pos.coords.longitude, pos.coords.latitude], 500);
-          if (online) {
+          if (onlineRef.current) {
             api.driver.setStatus(driverId, { online: true, ...coords }).catch(() => {});
           }
           // Refresh route if active
-          if (activeRide) {
+          if (activeRideRef.current) {
             loadRoute(coords, DROPOFF);
           }
         }
