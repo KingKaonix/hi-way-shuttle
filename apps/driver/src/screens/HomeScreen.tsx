@@ -3,7 +3,7 @@ import {
   View, Text, TouchableOpacity, StyleSheet, Alert, Vibration,
   ActivityIndicator, Animated, Dimensions,
 } from 'react-native';
-import { Map, Camera, UserLocation, GeoJSONSource, Layer } from '@maplibre/maplibre-react-native';
+import { MapView, Camera, UserLocation, GeoJSONSource, Layer } from '@maplibre/maplibre-react-native';
 import type { CameraRef } from '@maplibre/maplibre-react-native';
 import * as Location from 'expo-location';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -172,10 +172,10 @@ export default function HomeScreen({ navigation, driverId, driverName }: Props) 
 
   return (
     <View style={{ flex: 1, backgroundColor: '#0a1628' }}>
-      <Map style={{ flex: 1 }} mapStyle={MAP_STYLE} logoEnabled logoPosition={{ bottom: 8, left: 8 }}>
+      <MapView style={{ flex: 1 }} mapStyle={MAP_STYLE} logoEnabled logoPosition={{ bottom: 8, left: 8 }}>
         <Camera
           ref={cameraRef}
-          defaultSettings={{ centerCoordinate: [-74.006, 40.7128], zoomLevel: 14 }}
+          defaultSettings={{ centerCoordinate: [-74.006, 40.7128], zoom: 14 }}
         />
         {locationPermission && <UserLocation visible showsUserHeadingIndicator />}
 
@@ -194,7 +194,7 @@ export default function HomeScreen({ navigation, driverId, driverName }: Props) 
             />
           </GeoJSONSource>
         )}
-      </Map>
+      </MapView>
 
       {/* Top bar */}
       <SafeAreaView style={styles.topBar}>

@@ -3,7 +3,7 @@ import {
   View, Text, TouchableOpacity, StyleSheet, Alert,
   ActivityIndicator, Animated, Vibration,
 } from 'react-native';
-import { Map, Camera, UserLocation } from '@maplibre/maplibre-react-native';
+import { MapView, Camera, UserLocation } from '@maplibre/maplibre-react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
@@ -68,12 +68,12 @@ export default function RideScreen({ navigation }: Props) {
 
   return (
     <View style={{ flex: 1, backgroundColor: '#0a1628' }}>
-      <Map style={{ flex: 1 }} mapStyle={MAP_STYLE} logo logoPosition={{ bottom: 8, left: 8 }}>
+      <MapView style={{ flex: 1 }} mapStyle={MAP_STYLE} logoEnabled logoPosition={{ bottom: 8, left: 8 }}>
         <Camera
-          initialViewState={{ center: [-74.006, 40.7128], zoomLevel: 14, pitch: 45 }}
+          defaultSettings={{ centerCoordinate: [-74.006, 40.7128], zoom: 14, pitch: 45 }}
         />
         <UserLocation visible showsUserHeadingIndicator />
-      </Map>
+      </MapView>
 
       <SafeAreaView style={styles.topBar}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
