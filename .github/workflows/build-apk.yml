@@ -75,5 +75,49 @@ jobs:
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: hiway-${{ matrix.app }}-${{ github.event.inputs.build_type || 'release' }}
+          name: hiway-${{ matrix.app }}-${{ github.event.inputs.build_type || 'release' }}-${{ github.run_number }}
           path: apps/${{ matrix.app }}/android/app/build/outputs/apk/**/*.apk
+
+  release:
+    needs: build
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download Rider APK
+        uses: actions/download-artifact@v4
+        with:
+          name: hiway-rider-${{ github.event.inputs.build_type || 'release' }}-${{ github.run_number }}
+          path: apks/
+
+      - name: Download Driver APK
+        uses: actions/download-artifact@v4
+        with:
+          name: hiway-driver-${{ github.event.inputs.build_type || 'release' }}-${{ github.run_number }}
+          path: apks/
+
+      - name: Generate release tag
+        id: tag
+        run: |
+          echo "version=v$(date +'%Y.%m.%d')-build-${{ github.run_number }}" >> $GITHUB_OUTPUT
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.tag.outputs.version }}
+          name: "HiWay ${{ github.event.inputs.build_type || 'release' }} ${{ steps.tag.outputs.version }}"
+          body: |
+            ## HiWay Rideshare APK Build
+
+            - Build #${{ github.run_number }}
+            - Trigger: ${{ github.event_name }}
+            - Commit: ${{ github.sha }}
+
+            **Changes in this build:**
+            ${{ github.event.head_commit.message || 'See commit for details' }}
+          files: apks/**/*.apk
+          generate_release_notes: false
