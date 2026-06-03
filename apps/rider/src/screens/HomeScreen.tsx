@@ -39,6 +39,7 @@ export default function HomeScreen({ navigation, riderId, riderName }: Props) {
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<typeof PLACES>([]);
   const [booking, setBooking] = useState(false);
+  const [locationPermission, setLocationPermission] = useState(false);
   const [subscription, setSubscription] = useState<any>(null);
   const sheetAnim = useRef(new Animated.Value(0)).current;
 
@@ -49,6 +50,7 @@ export default function HomeScreen({ navigation, riderId, riderName }: Props) {
         Alert.alert('Permission denied', 'Location is needed to find nearby drivers.');
         return;
       }
+      setLocationPermission(true);
       const loc = await Location.getCurrentPositionAsync({});
       const coords = { lat: loc.coords.latitude, lng: loc.coords.longitude };
       setLocation(coords);
@@ -118,17 +120,14 @@ export default function HomeScreen({ navigation, riderId, riderName }: Props) {
       <Map
         style={{ flex: 1 }}
         mapStyle={MAP_STYLE}
-        logo
+        logoEnabled
         logoPosition={{ bottom: 8, left: 8 }}
       >
         <Camera
           ref={cameraRef}
-          initialViewState={{
-            center: [-74.006, 40.7128],
-            zoomLevel: 12,
-          }}
+          defaultSettings={{ centerCoordinate: [-74.006, 40.7128], zoomLevel: 12 }}
         />
-        <UserLocation visible showsUserHeadingIndicator />
+        {locationPermission && <UserLocation visible showsUserHeadingIndicator />}
         {dropoff && (
           <Marker id="dropoff" lngLat={[dropoff.lng, dropoff.lat]}>
             <View style={styles.markerPin}>
