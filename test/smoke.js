@@ -89,7 +89,7 @@ async function run() {
 
   const landing = await request('GET', '/');
   check('GET / returns 200', landing.status === 200);
-  check('Landing page has Hi-Way-Shuttle', landing.body.includes('Hi-Way-Shuttle'));
+  check('Landing page has HiWay', landing.body.includes('HiWay'));
 
   console.log(`\n${passed} passed, ${failed} failed`);
   process.exit(failed > 0 ? 1 : 0);
