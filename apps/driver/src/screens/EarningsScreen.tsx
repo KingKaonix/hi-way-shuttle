@@ -68,7 +68,6 @@ export default function EarningsScreen({ navigation }: Props) {
             <Text style={styles.summaryStatLabel}>Rating</Text>
           </View>
         </View>
-      </View>
 
       <FlatList
         data={history}
