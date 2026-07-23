@@ -10,6 +10,7 @@ const { createTelegramBot } = require('./bots/telegram');
 const { createMessengerBot } = require('./bots/messenger');
 const { getBookings, addBooking, cancelBooking, loadBookings, saveBookings } = require('./store');
 const { startPolling } = require('./poller');
+const geocodeRouter = require('./geocode');
 
 // --- Simple in-memory auth ---
 const users = [];
@@ -277,6 +278,9 @@ app.put('/api/admin/schedules/:routeId', requireAdmin, (req, res) => {
   persistConfig();
   res.json(schedules[req.params.routeId]);
 });
+
+// --- Geocode API ---
+app.use('/api/geocode', geocodeRouter);
 
 // --- Webhooks ---
 app.post('/webhook/telegram', async (req, res) => {
